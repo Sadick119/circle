@@ -300,7 +300,7 @@
       <!-- ========================================== -->
       <section id="screen-home" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
         <!-- Clean Header: Just CIRCLE (No good morning text) -->
-        <div class="px-6 pt-3 pb-3 flex items-center justify-between">
+        <div class="px-6 pt-3 pb-2 flex items-center justify-between">
           <h1 class="text-2xl font-extrabold tracking-tight app-header-title">Circle</h1>
           <button onclick="navigateTo('profile')" class="relative p-0.5 rounded-full border-2 border-purple-200 dark:border-purple-800 hover:border-[#7048E8] transition active:scale-95" title="View Profile">
             <div id="homeUserAvatarContainer"></div>
@@ -308,8 +308,19 @@
           </button>
         </div>
 
+        <!-- Real-time Friend Search Bar (by @username or name) -->
+        <div class="px-6 pb-2.5">
+          <div class="relative">
+            <span class="absolute left-3.5 top-2.5 text-xs text-gray-400">🔍</span>
+            <input id="homeFriendSearchInput" oninput="handleFriendSearch(this.value)" type="text" placeholder="Search friends by @username or name..." class="w-full pl-9 pr-8 py-2 rounded-2xl bg-gray-100 dark:bg-[#1A1C2C] border border-gray-200/80 dark:border-gray-800 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#7048E8] transition">
+            <button id="clearHomeSearchBtn" onclick="clearHomeFriendSearch()" class="absolute right-3 top-2 text-xs font-bold text-gray-400 hover:text-gray-600 hidden">✕</button>
+          </div>
+          <!-- Live Search Results Dropdown -->
+          <div id="homeSearchResultsContainer" class="mt-2 space-y-2 hidden"></div>
+        </div>
+
         <!-- Section: Your rooms -->
-        <div class="pt-2 pb-4">
+        <div class="pt-1 pb-4">
           <div class="px-6 flex items-center justify-between mb-3">
             <div>
               <h2 class="text-base font-bold app-header-title">Your rooms</h2>
@@ -325,17 +336,31 @@
           </div>
         </div>
 
-        <!-- Section: Friends on Circle (Initials Avatars) -->
-        <div id="friendsAlsoOnCircleSection" class="px-6 pt-2 pb-4">
+        <!-- Section: Friends on Circle (from real contacts) -->
+        <div id="friendsAlsoOnCircleSection" class="px-6 pt-1 pb-4">
           <div class="flex items-center justify-between mb-2">
             <div>
               <h2 class="text-base font-bold app-header-title">Also on Circle</h2>
-              <p class="text-[11px] app-muted-text font-medium">Friends with accounts you can add and room with</p>
+              <p class="text-[11px] app-muted-text font-medium">Friends from your contacts already on Circle</p>
             </div>
+            <button onclick="openContactsModal()" class="px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/60 hover:bg-purple-200 text-[#7048E8] dark:text-[#A78BFA] text-[10px] font-bold flex items-center gap-1 active:scale-95 transition" title="Sync Phone Contacts">
+              <span>📇</span> <span>Contacts</span>
+            </button>
           </div>
 
           <div id="friendsOnCircleList" class="space-y-2.5 mt-2">
-            <!-- Dynamically populated friend cards -->
+            <!-- Dynamically populated contact-matched friend cards -->
+          </div>
+
+          <!-- Section: Invite friends via SMS (contacts not yet on Circle) -->
+          <div id="homeInviteContactsContainer" class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800/80">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold app-header-title">Invite Contacts via SMS</span>
+              <span class="text-[10px] app-muted-text">Direct text message</span>
+            </div>
+            <div id="homeInviteList" class="space-y-2">
+              <!-- Populated by renderHomeInviteList() -->
+            </div>
           </div>
         </div>
 
@@ -776,7 +801,7 @@
 
         <div class="px-6 mb-5">
           <div class="app-surface rounded-2xl border border-gray-100 dark:border-gray-800 p-4 grid grid-cols-3 text-center shadow-card-soft">
-            <div>
+            <div onclick="navigateTo('all-rooms')" class="cursor-pointer active:scale-95 transition">
               <div id="profileRoomsCount" class="text-lg font-black app-header-title">0</div>
               <div class="text-[11px] font-semibold app-muted-text">Rooms</div>
             </div>
@@ -784,14 +809,26 @@
               <div id="profileMomentsCount" class="text-lg font-black app-header-title">0</div>
               <div class="text-[11px] font-semibold app-muted-text">Moments</div>
             </div>
-            <div>
-              <div id="profileFriendsCount" class="text-lg font-black app-header-title">4</div>
-              <div class="text-[11px] font-semibold app-muted-text">Friends</div>
+            <div onclick="openFriendsModal('friends')" class="cursor-pointer active:scale-95 transition" title="View Friends List">
+              <div id="profileFriendsCount" class="text-lg font-black text-[#7048E8] dark:text-[#A78BFA]">0</div>
+              <div class="text-[11px] font-bold text-[#7048E8] dark:text-[#A78BFA]">Friends ❯</div>
             </div>
           </div>
         </div>
 
         <div class="px-6 space-y-2 mb-6">
+          <!-- My Friends List & Connections Row -->
+          <button onclick="openFriendsModal('friends')" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-purple-200 dark:border-purple-900 shadow-card-soft hover:bg-purple-50/50 transition">
+            <div class="flex items-center gap-3 font-bold text-xs text-[#7048E8] dark:text-[#A78BFA]">
+              <span class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/60 text-[#7048E8] flex items-center justify-center text-sm">👥</span>
+              <span>My Friends</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="profileFriendsBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-[#7048E8] dark:text-[#A78BFA] font-bold">0 Friends</span>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </button>
+
           <!-- Compilation Dumps Archives -->
           <button onclick="openCompilationHistoryModal()" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-purple-200 dark:border-purple-900 shadow-card-soft hover:bg-purple-50/50 transition">
             <div class="flex items-center gap-3 font-bold text-xs text-[#7048E8] dark:text-[#A78BFA]">
@@ -892,57 +929,222 @@
   </main>
 
   <!-- ========================================== -->
-  <!-- MODAL: EMAIL SIGN UP / SIGN IN (FULLY OPAQUE & CLEAN) -->
+  <!-- MODAL: PERSONALIZED USER AUTH (SIGN IN & SIGN UP) -->
   <!-- ========================================== -->
-  <div id="authModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
-    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-7 space-y-4 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+  <div id="authModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-6 space-y-3.5 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white max-h-[92vh] overflow-y-auto no-scrollbar">
+      
+      <!-- Modal Header -->
       <div class="flex items-center justify-between pb-1">
         <div class="flex items-center gap-2.5">
-          <img src="assets/circle-logo.jpg" class="w-8 h-8 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800">
+          <img src="assets/circle-logo.jpg" class="w-8 h-8 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800 object-cover">
           <div>
             <h3 id="authModalTitle" class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight">Create Account</h3>
-            <span class="text-[10px] text-[#7048E8] dark:text-[#A78BFA] font-bold">Circle Verification</span>
+            <span class="text-[10px] text-[#7048E8] dark:text-[#A78BFA] font-bold">Personalized Circle ID</span>
           </div>
         </div>
         <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
       </div>
 
-      <div class="p-3 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60">
-        <p id="authModalSubtitle" class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-          Please enter an <strong>actual working email</strong>. We will dispatch a real 6-digit verification code to your inbox.
-        </p>
+      <!-- Segmented Tab Header (Sign In vs Sign Up) -->
+      <div class="grid grid-cols-2 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl text-xs font-bold">
+        <button type="button" id="authTabSignup" onclick="setAuthTab('signup')" class="py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm">
+          Create Account
+        </button>
+        <button type="button" id="authTabSignin" onclick="setAuthTab('signin')" class="py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800">
+          Sign In
+        </button>
       </div>
 
-      <form onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
-        <div id="authNameField">
-          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Your Full Name</label>
-          <input id="authFullNameInput" type="text" placeholder="e.g. Eric Sadick" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+      <!-- Error Alert Box -->
+      <div id="authErrorMessage" class="p-3 bg-red-50 dark:bg-red-950/60 rounded-2xl border border-red-200 dark:border-red-900 text-xs font-semibold text-red-600 dark:text-red-300 hidden leading-tight"></div>
+
+      <!-- Auth Form -->
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
+
+        <!-- SIGN UP ONLY: Full Name -->
+        <div id="authFieldFullName">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+          <input id="authFullNameInput" type="text" placeholder="e.g. Eric Sadick" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
         </div>
 
+        <!-- SIGN UP ONLY: Choose Username -->
+        <div id="authFieldUsername">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Choose Username (Your Circle Identity)</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#7048E8]">@</span>
+            <input id="authUsernameInput" type="text" placeholder="ericsadick" class="w-full pl-8 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          </div>
+          <span class="text-[10px] text-gray-400 mt-0.5 block">Friends can search and add you with this @username</span>
+        </div>
+
+        <!-- SIGN UP ONLY: Phone Number -->
+        <div id="authFieldPhone">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Phone Number (Required for Contacts Matching)</label>
+          <input id="authPhoneInput" type="tel" placeholder="e.g. +1 555-123-4567 or 0241234567" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          <span class="text-[10px] text-gray-400 mt-0.5 block">Used to suggest your friends from their phone contacts</span>
+        </div>
+
+        <!-- SIGN UP ONLY: Email Address -->
+        <div id="authFieldEmail">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+          <input id="authEmailInput" type="email" placeholder="you@actualdomain.com" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+        </div>
+
+        <!-- SIGN IN ONLY: Login Identifier -->
+        <div id="authFieldLoginIdentifier" class="hidden">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Username, Email, or Phone Number</label>
+          <input id="authLoginIdentifierInput" type="text" placeholder="@username, email, or phone" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+        </div>
+
+        <!-- SHARED: Password -->
         <div>
-          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Actual Working Email</label>
-          <input id="authEmailInput" type="email" required placeholder="you@actualdomain.com" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
-          <span class="text-[10px] text-gray-400 mt-1 block">Real email verification code will be sent here</span>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300">Password</label>
+            <span class="text-[10px] text-gray-400">Strictly verified</span>
+          </div>
+          <input id="authPasswordInput" type="password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
         </div>
 
-        <div>
-          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Password</label>
-          <input id="authPasswordInput" type="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
-        </div>
-
-        <button type="submit" id="authSubmitButton" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-sm shadow-circle-sm active:scale-[0.98] transition mt-1 flex items-center justify-center gap-2">
-          <span id="authSubmitButtonText">Send Real Verification Email</span>
+        <!-- Submit Button -->
+        <button type="submit" id="authSubmitButton" class="w-full py-3.5 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-sm shadow-circle-sm active:scale-[0.98] transition mt-2 flex items-center justify-center gap-2">
+          <span id="authSubmitButtonText">Create Account</span>
         </button>
       </form>
 
-      <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
+      <!-- Quick Demo Credentials Hint (For Testing) -->
+      <div id="authDemoHint" class="p-2.5 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60 text-[11px] text-gray-600 dark:text-gray-300">
+        <span class="font-bold text-[#7048E8]">💡 Test Accounts:</span> Log in with <code class="font-bold">@ericsadick</code>, <code class="font-bold">@kofi_mensah</code>, or <code class="font-bold">@ama_k</code> (Password: <code class="font-bold">password123</code>).
+      </div>
+
+      <!-- Footer switch link -->
+      <div class="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs">
         <button onclick="toggleAuthMode()" id="authSwitchLink" class="font-bold text-[#7048E8] hover:underline">
           Already have an account? Sign In
         </button>
         <button onclick="openEmailSettingsModal()" class="text-[11px] text-gray-400 hover:text-[#7048E8] flex items-center gap-1 font-semibold">
-          <span>⚙️</span> <span>Email Settings</span>
+          <span>⚙️</span> <span>Email Relay</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CONTACTS PERMISSION & SYNC -->
+  <!-- ========================================== -->
+  <div id="contactsPermissionModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-6 space-y-4 text-center border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+      <div class="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-[#7048E8] text-3xl flex items-center justify-center mx-auto shadow-sm">
+        📇
+      </div>
+
+      <div>
+        <h3 class="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">Connect Your Contacts</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed font-medium">
+          Circle matches your phone contacts with friends who are already on Circle so you can invite them to rooms and share moments together.
+        </p>
+      </div>
+
+      <div class="p-3 bg-purple-50/60 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900 text-left text-xs space-y-1.5">
+        <div class="flex items-center gap-2 font-bold text-gray-800 dark:text-gray-200">
+          <span>✨</span> <span>Find friends already on Circle</span>
+        </div>
+        <div class="flex items-center gap-2 font-bold text-gray-800 dark:text-gray-200">
+          <span>✉️</span> <span>Invite remaining contacts via direct SMS</span>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <button onclick="requestContactsPermission()" class="w-full py-3.5 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-sm shadow-circle-sm active:scale-[0.98] transition">
+          Allow Contacts Access
+        </button>
+        <button onclick="closeContactsModal()" class="w-full py-2.5 rounded-full text-xs font-bold text-gray-400 hover:text-gray-600 transition">
+          Not Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: MY FRIENDS & CONNECTIONS (FULL SHEET) -->
+  <!-- ========================================== -->
+  <div id="friendsModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm h-[82vh] bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+      
+      <!-- Modal Header -->
+      <div class="px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">👥</span>
+          <div>
+            <h3 class="text-base font-extrabold app-header-title">Friends & Connections</h3>
+            <span id="friendsModalSubtitle" class="text-[10px] app-muted-text font-bold">Your Circle network</span>
+          </div>
+        </div>
+        <button onclick="closeFriendsModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
+      </div>
+
+      <!-- Segmented Tabs -->
+      <div class="px-5 pt-3 shrink-0">
+        <div class="grid grid-cols-3 p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl text-[11px] font-bold text-center">
+          <button type="button" id="tabBtnFriends" onclick="switchFriendsTab('friends')" class="py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm">
+            Friends (<span id="friendsTabCount">0</span>)
+          </button>
+          <button type="button" id="tabBtnRequests" onclick="switchFriendsTab('requests')" class="py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800 relative">
+            Requests (<span id="requestsTabCount">0</span>)
+            <span id="requestsRedDot" class="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+          </button>
+          <button type="button" id="tabBtnFind" onclick="switchFriendsTab('find')" class="py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800">
+            Find & Invite
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="flex-1 overflow-y-auto no-scrollbar p-5 space-y-3">
+        
+        <!-- TAB 1: ALL ACCEPTED FRIENDS -->
+        <div id="friendsTabContent" class="space-y-2.5">
+          <!-- Populated by renderFriendsTab() -->
+        </div>
+
+        <!-- TAB 2: FRIEND REQUESTS (INCOMING & OUTGOING) -->
+        <div id="requestsTabContent" class="space-y-3 hidden">
+          <!-- Populated by renderRequestsTab() -->
+        </div>
+
+        <!-- TAB 3: FIND FRIENDS BY USERNAME & CONTACTS -->
+        <div id="findTabContent" class="space-y-4 hidden">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">Search by Username</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-2.5 text-xs text-[#7048E8] font-bold">@</span>
+              <input id="modalSearchUsernameInput" oninput="handleModalUsernameSearch(this.value)" type="text" placeholder="Search @username or name..." class="w-full pl-8 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-xs font-semibold focus:outline-none focus:border-[#7048E8]">
+            </div>
+            <div id="modalSearchResultsContainer" class="mt-2 space-y-2"></div>
+          </div>
+
+          <!-- Phone Contacts Sync Card -->
+          <div class="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60">
+            <div class="flex items-center justify-between mb-2">
+              <div class="font-bold text-xs app-header-title">Phone Contacts</div>
+              <button onclick="requestContactsPermission()" class="px-2.5 py-1 rounded-full bg-[#7048E8] text-white text-[10px] font-bold active:scale-95 transition">
+                📇 Sync Contacts
+              </button>
+            </div>
+            <p class="text-[11px] app-muted-text">Match contacts to find friends on Circle or send an SMS invite.</p>
+          </div>
+
+          <!-- Contacts Invite via SMS Section -->
+          <div>
+            <div class="text-xs font-bold app-header-title mb-2">Invite Contacts via SMS</div>
+            <div id="modalContactsInviteList" class="space-y-2">
+              <!-- Populated by renderContactsInviteList() -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -1251,28 +1453,179 @@
   <!-- ========================================== -->
   <script>
     /* ========================================================
-       PERSISTENT DATABASE & ACCOUNT MANAGEMENT
+       PERSISTENT USER REGISTRY & MULTI-ACCOUNT AUTH (V5)
        ======================================================== */
-    const DB_KEY = 'circle_accounts_v3';
-    const ACTIVE_USER_KEY = 'circle_active_email_v3';
+    const DB_KEY = 'circle_users_registry_v5';
+    const ACTIVE_USER_ID_KEY = 'circle_active_userid_v5';
+
+    const DEFAULT_CONTACTS_BOOK = [
+      { name: 'Kofi Mensah', phone: '+15559876543' },
+      { name: 'Ama Boateng', phone: '+15554567890' },
+      { name: 'Jay Patel', phone: '+15556543210' },
+      { name: 'Daniel Brooks', phone: '+15553210987' },
+      { name: 'Sarah Jenkins', phone: '+15558889999' },
+      { name: 'Michael Scott', phone: '+15557776666' },
+      { name: 'Jessica Miller', phone: '+15553334444' }
+    ];
+
+    const DEFAULT_USERS_SEED = {
+      usr_eric: {
+        id: 'usr_eric',
+        username: 'ericsadick',
+        name: 'Eric Sadick',
+        phone: '+15551234567',
+        email: 'eric@example.com',
+        password: 'password123',
+        initials: 'ES',
+        color: 'bg-violet-600',
+        customAvatar: localStorage.getItem('circle_user_avatar') || null,
+        friends: ['usr_kofi', 'usr_ama'],
+        friendRequestsSent: [],
+        friendRequestsReceived: ['usr_jay'],
+        contacts: DEFAULT_CONTACTS_BOOK,
+        contactsPermissionGranted: false,
+        rooms: [],
+        moments: [],
+        compilationDumps: []
+      },
+      usr_kofi: {
+        id: 'usr_kofi',
+        username: 'kofi_mensah',
+        name: 'Kofi Mensah',
+        phone: '+15559876543',
+        email: 'kofi@example.com',
+        password: 'password123',
+        initials: 'KM',
+        color: 'bg-emerald-600',
+        customAvatar: null,
+        friends: ['usr_eric'],
+        friendRequestsSent: [],
+        friendRequestsReceived: [],
+        contacts: DEFAULT_CONTACTS_BOOK,
+        contactsPermissionGranted: true,
+        rooms: [],
+        moments: [],
+        compilationDumps: []
+      },
+      usr_ama: {
+        id: 'usr_ama',
+        username: 'ama_k',
+        name: 'Ama Boateng',
+        phone: '+15554567890',
+        email: 'ama@example.com',
+        password: 'password123',
+        initials: 'AB',
+        color: 'bg-pink-600',
+        customAvatar: null,
+        friends: ['usr_eric'],
+        friendRequestsSent: [],
+        friendRequestsReceived: [],
+        contacts: DEFAULT_CONTACTS_BOOK,
+        contactsPermissionGranted: true,
+        rooms: [],
+        moments: [],
+        compilationDumps: []
+      },
+      usr_jay: {
+        id: 'usr_jay',
+        username: 'jay_dev',
+        name: 'Jay Patel',
+        phone: '+15556543210',
+        email: 'jay@example.com',
+        password: 'password123',
+        initials: 'JP',
+        color: 'bg-blue-600',
+        customAvatar: null,
+        friends: [],
+        friendRequestsSent: ['usr_eric'],
+        friendRequestsReceived: [],
+        contacts: DEFAULT_CONTACTS_BOOK,
+        contactsPermissionGranted: false,
+        rooms: [],
+        moments: [],
+        compilationDumps: []
+      },
+      usr_daniel: {
+        id: 'usr_daniel',
+        username: 'daniel_b',
+        name: 'Daniel Brooks',
+        phone: '+15553210987',
+        email: 'daniel@example.com',
+        password: 'password123',
+        initials: 'DB',
+        color: 'bg-amber-600',
+        customAvatar: null,
+        friends: [],
+        friendRequestsSent: [],
+        friendRequestsReceived: [],
+        contacts: DEFAULT_CONTACTS_BOOK,
+        contactsPermissionGranted: false,
+        rooms: [],
+        moments: [],
+        compilationDumps: []
+      }
+    };
 
     function loadDatabase() {
       const stored = localStorage.getItem(DB_KEY);
       if (stored) {
-        try { return JSON.parse(stored); } catch (e) { console.warn(e); }
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.users && Object.keys(parsed.users).length > 0) {
+            return parsed;
+          }
+        } catch (e) {
+          console.warn('DB parse error:', e);
+        }
       }
-      return {};
+      const initialDb = { users: JSON.parse(JSON.stringify(DEFAULT_USERS_SEED)) };
+      saveDatabase(initialDb);
+      return initialDb;
     }
 
     function saveDatabase(db) {
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
 
+    function cleanPhoneNumber(p) {
+      if (!p) return '';
+      return String(p).replace(/[^\d+]/g, '');
+    }
+
+    function getCurrentUser() {
+      const db = loadDatabase();
+      const currentId = appState.currentUserId;
+      if (currentId && db.users && db.users[currentId]) {
+        return db.users[currentId];
+      }
+      return db.users['usr_eric'] || Object.values(db.users)[0];
+    }
+
+    function getUserById(id) {
+      const db = loadDatabase();
+      if (!id) return null;
+      if (db.users && db.users[id]) return db.users[id];
+      // fallback search by username
+      const clean = id.toLowerCase().replace('@', '');
+      return Object.values(db.users).find(u => u.username.toLowerCase() === clean) || null;
+    }
+
+    function saveCurrentUser(updatedFields) {
+      const db = loadDatabase();
+      const user = getCurrentUser();
+      if (!user) return;
+      Object.assign(user, updatedFields);
+      db.users[user.id] = user;
+      saveDatabase(db);
+    }
+
     const appState = {
       isDarkMode: localStorage.getItem('circle_dark_mode') === 'true',
-      currentUserId: 'eric',
-      currentUserEmail: localStorage.getItem(ACTIVE_USER_KEY) || 'eric@example.com',
+      currentUserId: localStorage.getItem(ACTIVE_USER_ID_KEY) || 'usr_eric',
       currentUserName: 'Eric Sadick',
+      currentUserHandle: '@ericsadick',
+      currentUserEmail: 'eric@example.com',
+      currentUserPhone: '+15551234567',
       activeRoomId: null,
       currentScreen: 'splash',
       screenHistory: ['splash'],
@@ -1288,74 +1641,37 @@
       selectedCreateRoomFriendIds: [],
       obligationHostRoomId: null,
 
-      // Initial user definitions with INITIALS and customAvatar support
-      users: {
-        eric: {
-          id: 'eric',
-          name: 'Eric Sadick',
-          email: 'eric@example.com',
-          initials: 'ES',
-          color: 'bg-violet-600',
-          customAvatar: localStorage.getItem('circle_user_avatar') || null,
-          roomsCount: 0,
-          momentsCount: 0,
-          friendsCount: 4,
-        },
-        kofi: {
-          id: 'kofi',
-          name: 'Kofi Mensah',
-          email: 'kofi@example.com',
-          initials: 'KM',
-          color: 'bg-emerald-600',
-          customAvatar: null,
-          roomsCount: 0,
-          momentsCount: 0,
-          friendsCount: 5,
-        },
-        ama: {
-          id: 'ama',
-          name: 'Ama Boateng',
-          email: 'ama@example.com',
-          initials: 'AB',
-          color: 'bg-pink-600',
-          customAvatar: null,
-          roomsCount: 0,
-          momentsCount: 0,
-          friendsCount: 6,
-        },
-        jay: {
-          id: 'jay',
-          name: 'Jay Patel',
-          email: 'jay@example.com',
-          initials: 'JP',
-          color: 'bg-blue-600',
-          customAvatar: null,
-          roomsCount: 0,
-          momentsCount: 0,
-          friendsCount: 4,
-        },
-        daniel: {
-          id: 'daniel',
-          name: 'Daniel Brooks',
-          email: 'daniel@example.com',
-          initials: 'DB',
-          color: 'bg-amber-600',
-          customAvatar: null,
-          roomsCount: 0,
-          momentsCount: 0,
-          friendsCount: 4,
-        }
+      // Dynamic getter for legacy references
+      get users() {
+        const db = loadDatabase();
+        // proxy to match users by id or username
+        return new Proxy(db.users, {
+          get(target, prop) {
+            if (prop in target) return target[prop];
+            // Match legacy keys (eric, kofi, ama, jay, daniel)
+            const legacyKey = 'usr_' + prop;
+            if (legacyKey in target) return target[legacyKey];
+            return target[prop];
+          }
+        });
       },
 
-      // Friends on Circle with accounts
-      friendsOnCircle: [
-        { id: 'kofi', name: 'Kofi Mensah', handle: '@kofi_mensah', initials: 'KM', color: 'bg-emerald-600', added: false },
-        { id: 'ama', name: 'Ama Boateng', handle: '@ama_k', initials: 'AB', color: 'bg-pink-600', added: false },
-        { id: 'jay', name: 'Jay Patel', handle: '@jay_dev', initials: 'JP', color: 'bg-blue-600', added: false },
-        { id: 'daniel', name: 'Daniel Brooks', handle: '@daniel_b', initials: 'DB', color: 'bg-amber-600', added: false },
-      ],
+      // Dynamic getter for legacy friendsOnCircle
+      get friendsOnCircle() {
+        const user = getCurrentUser();
+        const db = loadDatabase();
+        return Object.values(db.users)
+          .filter(u => u.id !== user.id)
+          .map(u => ({
+            id: u.id,
+            name: u.name,
+            handle: '@' + u.username,
+            initials: u.initials || getInitials(u.name),
+            color: u.color || 'bg-purple-600',
+            added: (user.friends || []).includes(u.id)
+          }));
+      },
 
-      // Rooms & Moments & Compilation Dumps
       rooms: [],
       moments: [],
       compilationDumps: [],
@@ -1364,7 +1680,7 @@
         {
           id: 'n_welcome',
           type: 'invite',
-          userId: 'ama',
+          userId: 'usr_ama',
           title: 'Ama Boateng is on Circle',
           subtitle: 'Add Ama to invite her to your rooms!',
           timeAgo: 'Just now',
@@ -1467,30 +1783,56 @@
       return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
     }
 
-    function openAuthModal(mode = 'signup') {
+    /* ========================================================
+       MULTI-ACCOUNT AUTH, PASSWORD VALIDATION & SESSION
+       ======================================================== */
+    function setAuthTab(mode) {
       appState.authMode = mode;
-      const modal = document.getElementById('authModal');
+      const tabSignup = document.getElementById('authTabSignup');
+      const tabSignin = document.getElementById('authTabSignin');
       const title = document.getElementById('authModalTitle');
-      const subtitle = document.getElementById('authModalSubtitle');
-      const submitBtn = document.getElementById('authSubmitButton');
       const submitText = document.getElementById('authSubmitButtonText');
       const switchLink = document.getElementById('authSwitchLink');
-      const nameField = document.getElementById('authNameField');
+      const errorMsg = document.getElementById('authErrorMessage');
+      if (errorMsg) errorMsg.classList.add('hidden');
+
+      const fieldFullName = document.getElementById('authFieldFullName');
+      const fieldUsername = document.getElementById('authFieldUsername');
+      const fieldPhone = document.getElementById('authFieldPhone');
+      const fieldEmail = document.getElementById('authFieldEmail');
+      const fieldLoginIdentifier = document.getElementById('authFieldLoginIdentifier');
+      const demoHint = document.getElementById('authDemoHint');
 
       if (mode === 'signup') {
-        title.innerText = 'Create Account';
-        subtitle.innerHTML = 'Please enter an <strong>actual working email</strong>. We will dispatch a real 6-digit verification code to your inbox.';
-        if (submitText) submitText.innerText = 'Send Real Verification Email';
-        switchLink.innerText = 'Already have an account? Sign In';
-        nameField.classList.remove('hidden');
+        if (tabSignup) tabSignup.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
+        if (tabSignin) tabSignin.className = "py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800";
+        if (title) title.innerText = 'Create Account';
+        if (submitText) submitText.innerText = 'Create Account';
+        if (switchLink) switchLink.innerText = 'Already have an account? Sign In';
+        if (fieldFullName) fieldFullName.classList.remove('hidden');
+        if (fieldUsername) fieldUsername.classList.remove('hidden');
+        if (fieldPhone) fieldPhone.classList.remove('hidden');
+        if (fieldEmail) fieldEmail.classList.remove('hidden');
+        if (fieldLoginIdentifier) fieldLoginIdentifier.classList.add('hidden');
+        if (demoHint) demoHint.classList.add('hidden');
       } else {
-        title.innerText = 'Sign In to Circle';
-        subtitle.innerText = 'Welcome back! Enter your email and password to access your circle.';
-        if (submitText) submitText.innerText = 'Sign In';
-        switchLink.innerText = "Don't have an account? Sign Up";
-        nameField.classList.add('hidden');
+        if (tabSignin) tabSignin.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
+        if (tabSignup) tabSignup.className = "py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800";
+        if (title) title.innerText = 'Sign In to Circle';
+        if (submitText) submitText.innerText = 'Sign In to Circle';
+        if (switchLink) switchLink.innerText = "Don't have an account? Create one";
+        if (fieldFullName) fieldFullName.classList.add('hidden');
+        if (fieldUsername) fieldUsername.classList.add('hidden');
+        if (fieldPhone) fieldPhone.classList.add('hidden');
+        if (fieldEmail) fieldEmail.classList.add('hidden');
+        if (fieldLoginIdentifier) fieldLoginIdentifier.classList.remove('hidden');
+        if (demoHint) demoHint.classList.remove('hidden');
       }
+    }
 
+    function openAuthModal(mode = 'signup') {
+      const modal = document.getElementById('authModal');
+      setAuthTab(mode);
       modal.classList.remove('opacity-0', 'pointer-events-none');
     }
 
@@ -1499,84 +1841,142 @@
     }
 
     function toggleAuthMode() {
-      openAuthModal(appState.authMode === 'signup' ? 'signin' : 'signup');
+      setAuthTab(appState.authMode === 'signup' ? 'signin' : 'signup');
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('authErrorMessage');
+      if (el) {
+        el.innerText = msg;
+        el.classList.remove('hidden');
+      }
+      showToast(msg, '⚠️');
+      playSound('pop');
     }
 
     async function handleAuthSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('authEmailInput').value.trim().toLowerCase();
-      const password = document.getElementById('authPasswordInput').value.trim();
-      const name = document.getElementById('authFullNameInput').value.trim() || 'Circle Friend';
-
-      if (!email || !password) {
-        showToast('Please enter both email and password.', '⚠️');
-        return;
-      }
-
-      if (!isValidWorkingEmail(email)) {
-        showToast('Please enter a valid working email address (e.g. name@gmail.com).', '⚠️');
-        return;
-      }
-
       const db = loadDatabase();
+      const password = document.getElementById('authPasswordInput').value.trim();
+      const errorMsg = document.getElementById('authErrorMessage');
+      if (errorMsg) errorMsg.classList.add('hidden');
 
       if (appState.authMode === 'signin') {
-        // Sign In
-        if (db[email] && db[email].password === password) {
-          restoreUserAccountData(email, db[email]);
-          closeAuthModal();
-          showToast(`Welcome back, ${db[email].name}!`, '✓');
-          navigateTo('home');
-        } else {
-          // If not in DB, allow sign in and preserve record
-          const mockUser = {
-            name: name || 'Eric Sadick',
-            email: email,
-            password: password,
-            rooms: [],
-            moments: [],
-            compilationDumps: []
-          };
-          db[email] = mockUser;
-          saveDatabase(db);
-          restoreUserAccountData(email, mockUser);
-          closeAuthModal();
-          showToast('Signed in to Circle!', '✓');
-          navigateTo('home');
+        const identifier = document.getElementById('authLoginIdentifierInput').value.trim();
+        if (!identifier || !password) {
+          showAuthError('Please enter your username, phone, or email, and password.');
+          return;
         }
+
+        const cleanId = identifier.toLowerCase().replace('@', '');
+        const cleanPhoneNum = cleanPhoneNumber(identifier);
+
+        // Find user by username, email, or normalized phone
+        const matchedUser = Object.values(db.users).find(u => {
+          const matchUsername = u.username && u.username.toLowerCase() === cleanId;
+          const matchEmail = u.email && u.email.toLowerCase() === identifier.toLowerCase();
+          const matchPhone = u.phone && cleanPhoneNumber(u.phone) === cleanPhoneNum && cleanPhoneNum.length >= 7;
+          return matchUsername || matchEmail || matchPhone;
+        });
+
+        if (!matchedUser) {
+          showAuthError('No account found with this username, phone number, or email. Please sign up.');
+          return;
+        }
+
+        // STRICT PASSWORD VALIDATION
+        if (matchedUser.password !== password) {
+          showAuthError('Incorrect password. Please verify your credentials and try again.');
+          return;
+        }
+
+        // Login successful
+        appState.currentUserId = matchedUser.id;
+        localStorage.setItem(ACTIVE_USER_ID_KEY, matchedUser.id);
+        restoreUserAccountData(matchedUser);
+        closeAuthModal();
+        showToast(`Welcome back, ${matchedUser.name}!`, '✓');
+
+        if (!matchedUser.contactsPermissionGranted) {
+          setTimeout(() => openContactsModal(), 400);
+        }
+        navigateTo('home');
       } else {
-        // Sign Up with REAL verification email
-        const submitBtn = document.getElementById('authSubmitButton');
-        const submitText = document.getElementById('authSubmitButtonText');
-        const prevText = submitText.innerText;
-        
-        submitBtn.disabled = true;
-        submitText.innerHTML = `
-          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          Sending real verification email...
-        `;
+        // Sign Up
+        const name = document.getElementById('authFullNameInput').value.trim();
+        const rawUsername = document.getElementById('authUsernameInput').value.trim().toLowerCase().replace('@', '');
+        const phone = document.getElementById('authPhoneInput').value.trim();
+        const email = document.getElementById('authEmailInput').value.trim().toLowerCase();
 
-        const randomCode = String(Math.floor(100000 + Math.random() * 900000));
-        appState.pendingVerificationCode = randomCode;
-        appState.pendingAuthData = { name, email, password };
-
-        let dispatchResult = { success: false, message: '' };
-        try {
-          const resp = await fetch('/api/send-verification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code: randomCode, name })
-          });
-          dispatchResult = await resp.json();
-        } catch (err) {
-          dispatchResult = { success: false, message: 'Could not contact server email relay: ' + err.message };
-        } finally {
-          submitBtn.disabled = false;
-          submitText.innerText = prevText;
+        if (!name) {
+          showAuthError('Please enter your full name.');
+          return;
         }
+
+        if (!rawUsername || rawUsername.length < 3) {
+          showAuthError('Please choose a valid username (at least 3 characters).');
+          return;
+        }
+
+        if (!/^[a-z0-9_]+$/.test(rawUsername)) {
+          showAuthError('Usernames can only contain letters, numbers, and underscores.');
+          return;
+        }
+
+        // Check username collision
+        const usernameExists = Object.values(db.users).some(u => u.username && u.username.toLowerCase() === rawUsername);
+        if (usernameExists) {
+          showAuthError(`The username @${rawUsername} is already taken. Please choose another.`);
+          return;
+        }
+
+        if (!phone && !email) {
+          showAuthError('Please provide a phone number or email.');
+          return;
+        }
+
+        if (password.length < 4) {
+          showAuthError('Password must be at least 4 characters long.');
+          return;
+        }
+
+        // Create personalized account
+        const newUserId = 'usr_' + Date.now();
+        const newUser = {
+          id: newUserId,
+          username: rawUsername,
+          name: name,
+          phone: phone,
+          email: email,
+          password: password,
+          initials: getInitials(name),
+          color: 'bg-indigo-600',
+          customAvatar: null,
+          friends: [],
+          friendRequestsSent: [],
+          friendRequestsReceived: [],
+          contacts: DEFAULT_CONTACTS_BOOK,
+          contactsPermissionGranted: false,
+          rooms: [],
+          moments: [],
+          compilationDumps: [],
+          createdAt: Date.now()
+        };
+
+        db.users[newUserId] = newUser;
+        saveDatabase(db);
+
+        appState.currentUserId = newUserId;
+        localStorage.setItem(ACTIVE_USER_ID_KEY, newUserId);
+        restoreUserAccountData(newUser);
 
         closeAuthModal();
-        openEmailVerifyModal(email, randomCode, dispatchResult);
+        playSound('pop');
+        showToast(`Account created! Welcome, ${name}! 🎉`, '✨');
+
+        // Automatically prompt for contacts access
+        setTimeout(() => openContactsModal(), 400);
+        navigateTo('home');
       }
     }
 
@@ -1642,24 +2042,33 @@
       if (entered === appState.pendingVerificationCode || (entered.length === 6 && !isNaN(entered))) {
         const { name, email, password } = appState.pendingAuthData || { name: 'Eric Sadick', email: 'eric@example.com', password: '123' };
         
-        // Save account in database
         const db = loadDatabase();
+        const newUserId = 'usr_' + Date.now();
         const newAccount = {
+          id: newUserId,
+          username: email.split('@')[0],
           name,
           email,
+          phone: '',
           password,
           initials: getInitials(name),
           customAvatar: null,
+          friends: [],
+          friendRequestsSent: [],
+          friendRequestsReceived: [],
+          contacts: DEFAULT_CONTACTS_BOOK,
+          contactsPermissionGranted: false,
           rooms: [],
           moments: [],
           compilationDumps: [],
           createdAt: Date.now()
         };
-        db[email] = newAccount;
+        db.users[newUserId] = newAccount;
         saveDatabase(db);
 
-        // Activate User
-        restoreUserAccountData(email, newAccount);
+        appState.currentUserId = newUserId;
+        localStorage.setItem(ACTIVE_USER_ID_KEY, newUserId);
+        restoreUserAccountData(newAccount);
 
         document.getElementById('emailVerifyModal').classList.add('opacity-0', 'pointer-events-none');
         playSound('pop');
@@ -1801,53 +2210,46 @@
       }
     }
 
-    function restoreUserAccountData(email, accountData) {
-      appState.currentUserEmail = email;
-      appState.currentUserName = accountData.name;
-      localStorage.setItem(ACTIVE_USER_KEY, email);
+    function restoreUserAccountData(user) {
+      if (!user) return;
+      appState.currentUserId = user.id;
+      appState.currentUserName = user.name;
+      appState.currentUserHandle = '@' + user.username;
+      appState.currentUserEmail = user.email || '';
+      appState.currentUserPhone = user.phone || '';
 
-      appState.users.eric.name = accountData.name;
-      appState.users.eric.email = email;
-      appState.users.eric.initials = accountData.initials || getInitials(accountData.name);
-      appState.users.eric.customAvatar = accountData.customAvatar || null;
-
-      appState.rooms = accountData.rooms || [];
-      appState.moments = accountData.moments || [];
-      appState.compilationDumps = accountData.compilationDumps || [];
+      appState.rooms = user.rooms || [];
+      appState.moments = user.moments || [];
+      appState.compilationDumps = user.compilationDumps || [];
       appState.activeRoomId = appState.rooms.length > 0 ? appState.rooms[0].id : null;
 
-      if (accountData.friends && Array.isArray(accountData.friends)) {
-        accountData.friends.forEach(saved => {
-          const f = appState.friendsOnCircle.find(x => x.id === saved.id);
-          if (f) f.added = saved.added;
-        });
-      }
-
-      document.getElementById('topAccountName').innerText = accountData.name;
+      const topName = document.getElementById('topAccountName');
+      if (topName) topName.innerText = user.name;
+      
+      const homeAvatar = document.getElementById('homeUserAvatarContainer');
+      if (homeAvatar) homeAvatar.innerHTML = renderUserAvatarHtml(user, 'w-8 h-8', 'text-xs');
     }
 
     function persistCurrentAccountData() {
       const db = loadDatabase();
-      const email = appState.currentUserEmail;
-      if (email) {
-        db[email] = {
-          ...(db[email] || {}),
-          name: appState.currentUserName,
-          email: email,
-          customAvatar: appState.users.eric.customAvatar,
-          rooms: appState.rooms,
-          moments: appState.moments,
-          compilationDumps: appState.compilationDumps,
-          friends: appState.friendsOnCircle.map(f => ({ id: f.id, added: f.added })),
-          updatedAt: Date.now()
-        };
+      const user = getCurrentUser();
+      if (user) {
+        user.name = appState.currentUserName;
+        user.rooms = appState.rooms;
+        user.moments = appState.moments;
+        user.compilationDumps = appState.compilationDumps;
+        user.updatedAt = Date.now();
+        db.users[user.id] = user;
         saveDatabase(db);
       }
     }
 
     function handleLogOut() {
       persistCurrentAccountData();
-      showToast('Logged out of Circle', '👋');
+      localStorage.removeItem(ACTIVE_USER_ID_KEY);
+      appState.currentUserId = null;
+      showToast('Logged out of Circle. See you soon! 👋', '🚪');
+      playSound('pop');
       navigateTo('splash');
     }
 
@@ -2083,38 +2485,589 @@
     }
 
     /* ========================================================
-       FRIENDS "ALSO ON CIRCLE" (WITH INITIALS)
+       CONTACTS PERMISSION, REAL CONTACT MATCHING & SMS INVITES
        ======================================================== */
-    function toggleAddFriend(friendId) {
-      const friend = appState.friendsOnCircle.find(f => f.id === friendId);
-      if (friend) {
-        friend.added = !friend.added;
-        persistCurrentAccountData();
-        playSound('pop');
-        showToast(friend.added ? `Added ${friend.name} to your friends list!` : `Removed ${friend.name}`, friend.added ? '✓' : 'ℹ️');
-        renderFriendsOnCircle();
-        if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+    function openContactsModal() {
+      const modal = document.getElementById('contactsPermissionModal');
+      if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeContactsModal() {
+      const modal = document.getElementById('contactsPermissionModal');
+      if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    async function requestContactsPermission() {
+      const user = getCurrentUser();
+      let importedContacts = [];
+
+      // Try Web Contact Picker API if supported on device (e.g. Chrome on Android)
+      if ('contacts' in navigator && 'ContactsManager' in window) {
+        try {
+          const props = ['name', 'tel'];
+          const picked = await navigator.contacts.select(props, { multiple: true });
+          if (picked && picked.length > 0) {
+            importedContacts = picked.map(c => ({
+              name: (c.name && c.name[0]) || 'Friend',
+              phone: (c.tel && c.tel[0]) || ''
+            }));
+          }
+        } catch (err) {
+          console.warn('Native contacts picker cancelled or unavailable:', err);
+        }
       }
+
+      // If no native contacts returned (or on desktop / iOS Safari), use default contacts book
+      if (importedContacts.length === 0) {
+        importedContacts = DEFAULT_CONTACTS_BOOK;
+      }
+
+      // Merge into user's contacts
+      const existingPhones = new Set((user.contacts || []).map(c => cleanPhoneNumber(c.phone)));
+      const merged = [...(user.contacts || [])];
+      for (const c of importedContacts) {
+        const clean = cleanPhoneNumber(c.phone);
+        if (clean && !existingPhones.has(clean)) {
+          merged.push(c);
+          existingPhones.add(clean);
+        }
+      }
+
+      user.contacts = merged;
+      user.contactsPermissionGranted = true;
+      saveCurrentUser(user);
+
+      closeContactsModal();
+      playSound('pop');
+      showToast('Contacts synced! Matching friends on Circle...', '📇');
+      renderFriendsOnCircle();
+      if (document.getElementById('friendsModal') && !document.getElementById('friendsModal').classList.contains('pointer-events-none')) {
+        renderFriendsModalTab('find');
+      }
+    }
+
+    function inviteContactViaSms(name, phone) {
+      const clean = cleanPhoneNumber(phone);
+      const appUrl = 'https://sadick119.github.io/circle/';
+      const msg = encodeURIComponent(`Hey ${name}! Join me on Circle to share real live photo moments with our friend group: ${appUrl}`);
+      const smsLink = `sms:${clean}?body=${msg}`;
+      playSound('pop');
+      showToast(`Opening SMS app to invite ${name}...`, '✉️');
+      window.open(smsLink, '_blank');
     }
 
     function renderFriendsOnCircle() {
       const container = document.getElementById('friendsOnCircleList');
+      const inviteContainer = document.getElementById('homeInviteList');
       if (!container) return;
 
-      container.innerHTML = appState.friendsOnCircle.map(f => {
-        const u = appState.users[f.id] || f;
+      const user = getCurrentUser();
+      const db = loadDatabase();
+      const contacts = user.contacts || DEFAULT_CONTACTS_BOOK;
+
+      // Match contacts against Circle registered users
+      const matchedFriends = [];
+      const notOnCircle = [];
+
+      for (const contact of contacts) {
+        const cPhone = cleanPhoneNumber(contact.phone);
+        // Find registered user with this phone
+        const matchedUser = Object.values(db.users).find(u => {
+          if (u.id === user.id) return false;
+          return u.phone && cleanPhoneNumber(u.phone) === cPhone && cPhone.length >= 7;
+        });
+
+        if (matchedUser) {
+          if (!matchedFriends.some(m => m.user.id === matchedUser.id)) {
+            matchedFriends.push({ contact, user: matchedUser });
+          }
+        } else {
+          notOnCircle.push(contact);
+        }
+      }
+
+      // Also include seed friends if contacts haven't matched yet
+      if (matchedFriends.length === 0) {
+        Object.values(db.users).forEach(u => {
+          if (u.id !== user.id && !(user.friends || []).includes(u.id)) {
+            matchedFriends.push({ contact: { name: u.name, phone: u.phone }, user: u });
+          }
+        });
+      }
+
+      // Filter out people who are ALREADY friends
+      const suggestions = matchedFriends.filter(item => !(user.friends || []).includes(item.user.id));
+
+      if (suggestions.length === 0) {
+        container.innerHTML = `
+          <div class="p-3.5 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center text-xs app-muted-text space-y-1">
+            <span class="font-bold text-gray-700 dark:text-gray-300">All matched contacts are your friends!</span>
+            <p class="text-[10px]">Use the search bar above to find friends by @username, or invite more via SMS below.</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = suggestions.map(item => {
+          const u = item.user;
+          const isRequested = (user.friendRequestsSent || []).includes(u.id);
+          const hasIncoming = (user.friendRequestsReceived || []).includes(u.id);
+
+          let actionBtn = '';
+          if (hasIncoming) {
+            actionBtn = `<button onclick="acceptFriendRequest('${u.id}')" class="px-3 py-1.5 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">Accept</button>`;
+          } else if (isRequested) {
+            actionBtn = `<span class="px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-950/60 text-[#7048E8] dark:text-[#A78BFA] text-[11px] font-bold">Request Sent ⏳</span>`;
+          } else {
+            actionBtn = `<button onclick="sendFriendRequest('${u.id}')" class="px-3.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-[#7048E8] dark:text-[#A78BFA] border border-purple-200 dark:border-purple-800 text-xs font-bold active:scale-95 transition hover:bg-purple-100">+ Add</button>`;
+          }
+
+          return `
+            <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
+              <div class="flex items-center gap-3">
+                ${renderUserAvatarHtml(u, 'w-11 h-11', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${u.name}</div>
+                  <div class="text-[10px] app-muted-text font-medium">@${u.username} • Friend in Contacts</div>
+                </div>
+              </div>
+              ${actionBtn}
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render SMS Invite list
+      if (inviteContainer) {
+        if (notOnCircle.length === 0) {
+          inviteContainer.innerHTML = `<span class="text-[11px] app-muted-text">All your contacts are registered on Circle!</span>`;
+        } else {
+          inviteContainer.innerHTML = notOnCircle.slice(0, 4).map(c => `
+            <div class="p-2.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800/80 flex items-center justify-between shadow-card-soft">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold flex items-center justify-center text-xs">
+                  ${getInitials(c.name)}
+                </div>
+                <div>
+                  <div class="text-xs font-bold app-header-title">${c.name}</div>
+                  <div class="text-[10px] app-muted-text font-mono">${c.phone}</div>
+                </div>
+              </div>
+              <button onclick="inviteContactViaSms('${c.name}', '${c.phone}')" class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition">
+                <span>✉️</span> <span>Invite</span>
+              </button>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    /* ========================================================
+       USERNAME SEARCH & FRIEND REQUESTS
+       ======================================================== */
+    function handleFriendSearch(query) {
+      const container = document.getElementById('homeSearchResultsContainer');
+      const clearBtn = document.getElementById('clearHomeSearchBtn');
+      if (!container) return;
+
+      const clean = (query || '').toLowerCase().replace('@', '').trim();
+      if (!clean) {
+        container.classList.add('hidden');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        return;
+      }
+
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      const user = getCurrentUser();
+      const db = loadDatabase();
+
+      const results = Object.values(db.users).filter(u => {
+        if (u.id === user.id) return false;
+        const uMatch = u.username && u.username.toLowerCase().includes(clean);
+        const nMatch = u.name && u.name.toLowerCase().includes(clean);
+        return uMatch || nMatch;
+      });
+
+      container.classList.remove('hidden');
+
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 bg-gray-50 dark:bg-[#1A1C2C] rounded-2xl border border-gray-200 dark:border-gray-800 text-center text-xs app-muted-text font-medium">
+            No Circle users found matching "@${clean}".
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = results.map(u => {
+        const isFriend = (user.friends || []).includes(u.id);
+        const isRequested = (user.friendRequestsSent || []).includes(u.id);
+        const hasIncoming = (user.friendRequestsReceived || []).includes(u.id);
+
+        let btn = '';
+        if (isFriend) {
+          btn = `<span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-full font-bold text-xs">Friends ✓</span>`;
+        } else if (hasIncoming) {
+          btn = `<button onclick="acceptFriendRequest('${u.id}')" class="px-3 py-1 bg-[#7048E8] text-white rounded-full font-bold text-xs active:scale-95 transition">Accept</button>`;
+        } else if (isRequested) {
+          btn = `<span class="px-3 py-1 bg-purple-100 dark:bg-purple-950 text-[#7048E8] dark:text-[#A78BFA] rounded-full font-bold text-xs">Requested ⏳</span>`;
+        } else {
+          btn = `<button onclick="sendFriendRequest('${u.id}')" class="px-3 py-1 bg-[#7048E8] text-white rounded-full font-bold text-xs active:scale-95 transition">+ Add Friend</button>`;
+        }
+
         return `
-          <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
-            <div class="flex items-center gap-3">
-              ${renderUserAvatarHtml(u, 'w-11 h-11', 'text-xs')}
+          <div class="p-2.5 bg-white dark:bg-[#1E1B38] rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2.5">
+              ${renderUserAvatarHtml(u, 'w-9 h-9', 'text-xs')}
               <div>
-                <div class="text-xs font-bold app-header-title">${f.name}</div>
-                <div class="text-[10px] app-muted-text font-medium">${f.handle}</div>
+                <div class="text-xs font-bold app-header-title">${u.name}</div>
+                <div class="text-[10px] text-[#7048E8] font-bold">@${u.username}</div>
               </div>
             </div>
-            <button onclick="toggleAddFriend('${f.id}')" class="px-3.5 py-1.5 rounded-full ${f.added ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border border-emerald-200' : 'bg-purple-50 dark:bg-purple-950/40 text-[#7048E8] dark:text-[#A78BFA] border border-purple-200'} text-xs font-bold transition active:scale-95 flex items-center gap-1">
-              <span>${f.added ? 'Added ✓' : '+ Add'}</span>
-            </button>
+            ${btn}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function clearHomeFriendSearch() {
+      const input = document.getElementById('homeFriendSearchInput');
+      if (input) input.value = '';
+      const container = document.getElementById('homeSearchResultsContainer');
+      if (container) container.classList.add('hidden');
+      const clearBtn = document.getElementById('clearHomeSearchBtn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+    }
+
+    function sendFriendRequest(targetUserId) {
+      const user = getCurrentUser();
+      const targetUser = getUserById(targetUserId);
+      if (!user || !targetUser) return;
+
+      if (!user.friendRequestsSent) user.friendRequestsSent = [];
+      if (!targetUser.friendRequestsReceived) targetUser.friendRequestsReceived = [];
+
+      if (!user.friendRequestsSent.includes(targetUserId)) {
+        user.friendRequestsSent.push(targetUserId);
+      }
+      if (!targetUser.friendRequestsReceived.includes(user.id)) {
+        targetUser.friendRequestsReceived.push(user.id);
+      }
+
+      const db = loadDatabase();
+      db.users[user.id] = user;
+      db.users[targetUser.id] = targetUser;
+      saveDatabase(db);
+
+      playSound('pop');
+      showToast(`Friend request sent to @${targetUser.username}!`, '✉️');
+
+      renderFriendsOnCircle();
+      handleFriendSearch(document.getElementById('homeFriendSearchInput') ? document.getElementById('homeFriendSearchInput').value : '');
+      if (document.getElementById('modalSearchUsernameInput')) {
+        handleModalUsernameSearch(document.getElementById('modalSearchUsernameInput').value);
+      }
+      if (appState.currentScreen === 'profile') renderProfileScreen();
+    }
+
+    function acceptFriendRequest(requesterUserId) {
+      const user = getCurrentUser();
+      const requester = getUserById(requesterUserId);
+      if (!user || !requester) return;
+
+      if (!user.friends) user.friends = [];
+      if (!requester.friends) requester.friends = [];
+
+      if (!user.friends.includes(requesterUserId)) user.friends.push(requesterUserId);
+      if (!requester.friends.includes(user.id)) requester.friends.push(user.id);
+
+      // Clean up requests
+      user.friendRequestsReceived = (user.friendRequestsReceived || []).filter(id => id !== requesterUserId);
+      user.friendRequestsSent = (user.friendRequestsSent || []).filter(id => id !== requesterUserId);
+      requester.friendRequestsSent = (requester.friendRequestsSent || []).filter(id => id !== user.id);
+      requester.friendRequestsReceived = (requester.friendRequestsReceived || []).filter(id => id !== user.id);
+
+      const db = loadDatabase();
+      db.users[user.id] = user;
+      db.users[requester.id] = requester;
+      saveDatabase(db);
+
+      playSound('pop');
+      showToast(`You and ${requester.name} are now friends! 🎉`, '✓');
+
+      renderFriendsOnCircle();
+      if (document.getElementById('friendsModal') && !document.getElementById('friendsModal').classList.contains('pointer-events-none')) {
+        renderFriendsModalTab('friends');
+      }
+      if (appState.currentScreen === 'profile') renderProfileScreen();
+      if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+    }
+
+    function declineFriendRequest(requesterUserId) {
+      const user = getCurrentUser();
+      user.friendRequestsReceived = (user.friendRequestsReceived || []).filter(id => id !== requesterUserId);
+      saveCurrentUser(user);
+      playSound('pop');
+      showToast('Friend request dismissed', 'ℹ️');
+      renderFriendsModalTab('requests');
+    }
+
+    function removeFriend(friendId) {
+      const user = getCurrentUser();
+      const friend = getUserById(friendId);
+      user.friends = (user.friends || []).filter(id => id !== friendId);
+      if (friend) {
+        friend.friends = (friend.friends || []).filter(id => id !== user.id);
+      }
+      const db = loadDatabase();
+      db.users[user.id] = user;
+      if (friend) db.users[friend.id] = friend;
+      saveDatabase(db);
+
+      playSound('pop');
+      showToast('Removed from your friends list', 'ℹ️');
+      renderFriendsModalTab('friends');
+      renderFriendsOnCircle();
+      if (appState.currentScreen === 'profile') renderProfileScreen();
+      if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+    }
+
+    function toggleAddFriend(friendId) {
+      const user = getCurrentUser();
+      if ((user.friends || []).includes(friendId)) {
+        removeFriend(friendId);
+      } else {
+        acceptFriendRequest(friendId);
+      }
+    }
+
+    /* ========================================================
+       FRIENDS MODAL (PROFILE & NETWORK VIEWER)
+       ======================================================== */
+    let currentFriendsTab = 'friends';
+
+    function openFriendsModal(tab = 'friends') {
+      const modal = document.getElementById('friendsModal');
+      if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
+      switchFriendsTab(tab);
+    }
+
+    function closeFriendsModal() {
+      const modal = document.getElementById('friendsModal');
+      if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function switchFriendsTab(tab) {
+      currentFriendsTab = tab;
+      const btnFriends = document.getElementById('tabBtnFriends');
+      const btnRequests = document.getElementById('tabBtnRequests');
+      const btnFind = document.getElementById('tabBtnFind');
+
+      const contentFriends = document.getElementById('friendsTabContent');
+      const contentRequests = document.getElementById('requestsTabContent');
+      const contentFind = document.getElementById('findTabContent');
+
+      // Reset tab active styling
+      [btnFriends, btnRequests, btnFind].forEach(b => {
+        if (b) b.className = "py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800";
+      });
+      [contentFriends, contentRequests, contentFind].forEach(c => {
+        if (c) c.classList.add('hidden');
+      });
+
+      if (tab === 'friends') {
+        if (btnFriends) btnFriends.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
+        if (contentFriends) contentFriends.classList.remove('hidden');
+      } else if (tab === 'requests') {
+        if (btnRequests) btnRequests.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm relative";
+        if (contentRequests) contentRequests.classList.remove('hidden');
+      } else {
+        if (btnFind) btnFind.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
+        if (contentFind) contentFind.classList.remove('hidden');
+      }
+
+      renderFriendsModalTab(tab);
+    }
+
+    function renderFriendsModalTab(tab) {
+      const user = getCurrentUser();
+      const friends = (user.friends || []).map(fId => getUserById(fId)).filter(Boolean);
+      const incoming = (user.friendRequestsReceived || []).map(fId => getUserById(fId)).filter(Boolean);
+      const outgoing = (user.friendRequestsSent || []).map(fId => getUserById(fId)).filter(Boolean);
+
+      // Update badge counts
+      const friendsCountEl = document.getElementById('friendsTabCount');
+      if (friendsCountEl) friendsCountEl.innerText = friends.length;
+      const reqCountEl = document.getElementById('requestsTabCount');
+      if (reqCountEl) reqCountEl.innerText = incoming.length;
+      const redDot = document.getElementById('requestsRedDot');
+      if (redDot) {
+        if (incoming.length > 0) redDot.classList.remove('hidden');
+        else redDot.classList.add('hidden');
+      }
+
+      if (tab === 'friends') {
+        const container = document.getElementById('friendsTabContent');
+        if (!container) return;
+        if (friends.length === 0) {
+          container.innerHTML = `
+            <div class="p-8 text-center space-y-3">
+              <div class="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-950/60 text-2xl flex items-center justify-center mx-auto text-[#7048E8]">👥</div>
+              <h4 class="text-sm font-bold app-header-title">No Friends Added Yet</h4>
+              <p class="text-xs app-muted-text">Find friends using their @username or sync your contacts to add them!</p>
+              <button onclick="switchFriendsTab('find')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">
+                Find & Add Friends
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = friends.map(f => `
+            <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
+              <div class="flex items-center gap-3">
+                ${renderUserAvatarHtml(f, 'w-11 h-11', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${f.name}</div>
+                  <div class="text-[10px] app-muted-text font-medium">@${f.username} • ${f.phone || f.email}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="closeFriendsModal(); navigateTo('create-room')" class="px-2.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-[#7048E8] dark:text-[#A78BFA] text-[11px] font-bold active:scale-95 transition">
+                  + Room
+                </button>
+                <button onclick="removeFriend('${f.id}')" class="p-1.5 text-gray-400 hover:text-red-500 active:scale-90 transition" title="Remove Friend">
+                  ✕
+                </button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } else if (tab === 'requests') {
+        const container = document.getElementById('requestsTabContent');
+        if (!container) return;
+        let html = '';
+
+        if (incoming.length === 0 && outgoing.length === 0) {
+          container.innerHTML = `
+            <div class="p-8 text-center space-y-2">
+              <div class="text-3xl">📬</div>
+              <div class="text-xs font-bold app-header-title">No Pending Requests</div>
+              <p class="text-[11px] app-muted-text">When friends send you a request on Circle, it will show up here.</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (incoming.length > 0) {
+          html += `<div class="text-xs font-bold app-header-title mb-1.5">Incoming Requests (${incoming.length})</div>`;
+          html += incoming.map(r => `
+            <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft mb-2">
+              <div class="flex items-center gap-2.5">
+                ${renderUserAvatarHtml(r, 'w-10 h-10', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${r.name}</div>
+                  <div class="text-[10px] text-[#7048E8] font-bold">@${r.username}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="acceptFriendRequest('${r.id}')" class="px-3 py-1 rounded-full bg-[#7048E8] text-white text-xs font-bold active:scale-95 transition">Accept</button>
+                <button onclick="declineFriendRequest('${r.id}')" class="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-xs font-bold active:scale-95 transition">✕</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        if (outgoing.length > 0) {
+          html += `<div class="text-xs font-bold app-header-title mt-4 mb-1.5">Sent Requests (${outgoing.length})</div>`;
+          html += outgoing.map(r => `
+            <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft mb-2">
+              <div class="flex items-center gap-2.5">
+                ${renderUserAvatarHtml(r, 'w-10 h-10', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${r.name}</div>
+                  <div class="text-[10px] app-muted-text font-bold">@${r.username}</div>
+                </div>
+              </div>
+              <span class="text-[11px] font-bold text-purple-600 dark:text-purple-400">Pending ⏳</span>
+            </div>
+          `).join('');
+        }
+
+        container.innerHTML = html;
+      } else if (tab === 'find') {
+        const inviteContainer = document.getElementById('modalContactsInviteList');
+        if (inviteContainer) {
+          const contacts = user.contacts || DEFAULT_CONTACTS_BOOK;
+          const notOnCircle = contacts.filter(c => {
+            const clean = cleanPhoneNumber(c.phone);
+            const db = loadDatabase();
+            return !Object.values(db.users).some(u => u.phone && cleanPhoneNumber(u.phone) === clean);
+          });
+
+          inviteContainer.innerHTML = notOnCircle.map(c => `
+            <div class="p-2.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold flex items-center justify-center text-xs">
+                  ${getInitials(c.name)}
+                </div>
+                <div>
+                  <div class="text-xs font-bold app-header-title">${c.name}</div>
+                  <div class="text-[10px] app-muted-text font-mono">${c.phone}</div>
+                </div>
+              </div>
+              <button onclick="inviteContactViaSms('${c.name}', '${c.phone}')" class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition">
+                <span>✉️</span> <span>SMS</span>
+              </button>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function handleModalUsernameSearch(query) {
+      const container = document.getElementById('modalSearchResultsContainer');
+      if (!container) return;
+      const clean = (query || '').toLowerCase().replace('@', '').trim();
+      if (!clean) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const user = getCurrentUser();
+      const db = loadDatabase();
+      const results = Object.values(db.users).filter(u => {
+        if (u.id === user.id) return false;
+        return (u.username && u.username.toLowerCase().includes(clean)) || (u.name && u.name.toLowerCase().includes(clean));
+      });
+
+      if (results.length === 0) {
+        container.innerHTML = `<div class="p-2 text-center text-xs app-muted-text">No user found matching "@${clean}"</div>`;
+        return;
+      }
+
+      container.innerHTML = results.map(u => {
+        const isFriend = (user.friends || []).includes(u.id);
+        const isRequested = (user.friendRequestsSent || []).includes(u.id);
+        const hasIncoming = (user.friendRequestsReceived || []).includes(u.id);
+
+        let btn = '';
+        if (isFriend) {
+          btn = `<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-xs">Friends ✓</span>`;
+        } else if (hasIncoming) {
+          btn = `<button onclick="acceptFriendRequest('${u.id}')" class="px-3 py-1 bg-[#7048E8] text-white rounded-full font-bold text-xs">Accept</button>`;
+        } else if (isRequested) {
+          btn = `<span class="px-3 py-1 bg-purple-100 text-[#7048E8] rounded-full font-bold text-xs">Requested ⏳</span>`;
+        } else {
+          btn = `<button onclick="sendFriendRequest('${u.id}')" class="px-3 py-1 bg-[#7048E8] text-white rounded-full font-bold text-xs">+ Add</button>`;
+        }
+
+        return `
+          <div class="p-2.5 bg-gray-50 dark:bg-[#1E1B38] rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              ${renderUserAvatarHtml(u, 'w-8 h-8', 'text-[10px]')}
+              <div>
+                <div class="text-xs font-bold app-header-title">${u.name}</div>
+                <div class="text-[10px] text-[#7048E8] font-bold">@${u.username}</div>
+              </div>
+            </div>
+            ${btn}
           </div>
         `;
       }).join('');
@@ -2705,13 +3658,16 @@
        RENDERERS: PROFILE & ALL ROOMS & NOTIFICATIONS
        ======================================================== */
     function renderProfileScreen() {
-      const user = appState.users.eric;
+      const user = getCurrentUser();
+      const friendsCount = (user.friends || []).length;
       document.getElementById('profileUserAvatarDisplay').innerHTML = renderUserAvatarHtml(user, 'w-full h-full', 'text-2xl');
-      document.getElementById('profileUserName').innerText = appState.currentUserName || user.name;
-      document.getElementById('profileUserHandle').innerText = appState.currentUserEmail;
-      document.getElementById('profileRoomsCount').innerText = user.roomsCount;
-      document.getElementById('profileMomentsCount').innerText = user.momentsCount;
-      document.getElementById('profileFriendsCount').innerText = user.friendsCount;
+      document.getElementById('profileUserName').innerText = user.name;
+      document.getElementById('profileUserHandle').innerText = `@${user.username} • ${user.phone || user.email}`;
+      document.getElementById('profileRoomsCount').innerText = (user.rooms || appState.rooms).length;
+      document.getElementById('profileMomentsCount').innerText = (user.moments || appState.moments).length;
+      document.getElementById('profileFriendsCount').innerText = friendsCount;
+      const friendsBadge = document.getElementById('profileFriendsBadge');
+      if (friendsBadge) friendsBadge.innerText = `${friendsCount} Friends`;
       document.getElementById('profileDumpCountBadge').innerText = `${appState.compilationDumps.length} Dumps`;
     }
 
@@ -2857,17 +3813,17 @@
 
     function renderCreateRoomScreen() {
       // Host avatar & name
-      const host = appState.users.eric;
+      const host = getCurrentUser();
       const hostAvatarEl = document.getElementById('createRoomHostAvatar');
       if (hostAvatarEl) hostAvatarEl.innerHTML = renderUserAvatarHtml(host, 'w-8 h-8', 'text-[10px]');
       const hostNameEl = document.getElementById('createRoomHostName');
-      if (hostNameEl) hostNameEl.innerText = `${appState.currentUserName} (You)`;
+      if (hostNameEl) hostNameEl.innerText = `${host.name} (You • @${host.username})`;
       
       const errorNotice = document.getElementById('createRoomErrorNotice');
       if (errorNotice) errorNotice.classList.add('hidden');
 
-      // Populate friends list (only added friends from user's friends list)
-      const addedFriends = appState.friendsOnCircle.filter(f => f.added);
+      // Populate friends list (only accepted friends from user's friends list)
+      const addedFriends = (host.friends || []).map(fId => getUserById(fId)).filter(Boolean);
       const container = document.getElementById('createRoomFriendsList');
 
       if (!appState.selectedCreateRoomFriendIds) {
@@ -2884,9 +3840,9 @@
         container.innerHTML = `
           <div class="p-4 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center space-y-2">
             <div class="text-xs font-bold app-header-title">No friends on your Circle yet</div>
-            <p class="text-[11px] app-muted-text">You must add at least 1 friend from "Also on Circle" before creating a room.</p>
-            <button onclick="navigateTo('home')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">
-              + Add Friends on Home
+            <p class="text-[11px] app-muted-text">You must add at least 1 friend before creating a room.</p>
+            <button onclick="openFriendsModal('find')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">
+              + Find & Add Friends
             </button>
           </div>
         `;
@@ -2894,15 +3850,14 @@
       }
 
       container.innerHTML = addedFriends.map(f => {
-        const u = appState.users[f.id] || f;
         const isSelected = appState.selectedCreateRoomFriendIds.includes(f.id);
         return `
           <div onclick="toggleCreateRoomFriend('${f.id}')" class="p-3 rounded-2xl border ${isSelected ? 'bg-purple-50 dark:bg-purple-950/50 border-[#7048E8]' : 'app-surface border-gray-100 dark:border-gray-800'} flex items-center justify-between cursor-pointer active:scale-[0.99] transition shadow-sm">
             <div class="flex items-center gap-3">
-              ${renderUserAvatarHtml(u, 'w-9 h-9', 'text-xs')}
+              ${renderUserAvatarHtml(f, 'w-9 h-9', 'text-xs')}
               <div>
                 <div class="text-xs font-bold app-header-title">${f.name}</div>
-                <div class="text-[10px] app-muted-text font-medium">${f.handle}</div>
+                <div class="text-[10px] app-muted-text font-medium">@${f.username}</div>
               </div>
             </div>
             <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'bg-[#7048E8] border-[#7048E8] text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center text-xs font-bold transition">
@@ -2954,9 +3909,10 @@
         return;
       }
 
+      const host = getCurrentUser();
       const generatedCode = document.getElementById('generatedRoomCode').innerText;
       // Host + ONLY the friends explicitly chosen by the host
-      const members = [appState.currentUserId, ...appState.selectedCreateRoomFriendIds];
+      const members = [host.id, ...appState.selectedCreateRoomFriendIds];
 
       const newRoom = {
         id: 'room-' + Date.now(),
@@ -2971,7 +3927,8 @@
 
       appState.rooms.unshift(newRoom);
       appState.activeRoomId = newRoom.id;
-      appState.users.eric.roomsCount++;
+      if (!host.rooms) host.rooms = [];
+      host.rooms.push(newRoom.id);
 
       // Obligate host to post the first moment!
       appState.obligationHostRoomId = newRoom.id;
@@ -2981,6 +3938,13 @@
       document.getElementById('generatedRoomCode').innerText = generateRandomCode();
       document.getElementById('createRoomNameInput').value = '';
       appState.selectedCreateRoomFriendIds = [];
+
+      playSound('pop');
+      showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
+
+      // Immediately launch live camera screen in Host Obligation mode
+      openLiveCameraScreen(newRoom.id, true);
+    }
 
       playSound('pop');
       showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
@@ -3147,11 +4111,16 @@
 
     // Initialize App
     window.addEventListener('DOMContentLoaded', () => {
-      // Restore user session if exists
-      const savedEmail = localStorage.getItem(ACTIVE_USER_KEY);
+      // Initialize Database & Restore active user session
       const db = loadDatabase();
-      if (savedEmail && db[savedEmail]) {
-        restoreUserAccountData(savedEmail, db[savedEmail]);
+      const savedUserId = localStorage.getItem(ACTIVE_USER_ID_KEY);
+      if (savedUserId && db.users && db.users[savedUserId]) {
+        restoreUserAccountData(db.users[savedUserId]);
+      } else {
+        const defaultUser = db.users['usr_eric'] || Object.values(db.users)[0];
+        if (defaultUser) {
+          restoreUserAccountData(defaultUser);
+        }
       }
       applyTheme();
       navigateTo('splash');
