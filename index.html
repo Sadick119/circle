@@ -574,13 +574,11 @@
           </button>
         </div>
       </section>
-      </section>
-
 
       <!-- ========================================== -->
       <!-- SCREEN 5: CREATE A ROOM -->
       <!-- ========================================== -->
-      <section id="screen-create-room" class="screen-view flex-1 flex flex-col justify-between px-6 pt-3 pb-8 overflow-y-auto no-scrollbar hidden">
+      <section id="screen-create-room" class="screen-view flex-1 flex flex-col justify-between px-6 pt-3 pb-12 overflow-y-auto no-scrollbar hidden">
         <div>
           <div class="flex items-center justify-between mb-4">
             <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
@@ -591,13 +589,13 @@
           </div>
 
           <div class="flex flex-col items-center text-center my-2">
-            <div class="w-28 h-28 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative mb-3 shadow-inner">
+            <div class="w-24 h-24 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative mb-3 shadow-inner">
               <div class="flex items-center -space-x-2">
-                <div class="w-10 h-10 rounded-full bg-pink-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">AB</div>
-                <div class="w-12 h-12 rounded-full bg-[#7048E8] text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F] z-10 shadow">ES</div>
-                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">KM</div>
+                <div class="w-9 h-9 rounded-full bg-pink-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">AB</div>
+                <div class="w-11 h-11 rounded-full bg-[#7048E8] text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F] z-10 shadow">ES</div>
+                <div class="w-9 h-9 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">KM</div>
               </div>
-              <div class="absolute bottom-1 right-2 w-7 h-7 rounded-full bg-[#7048E8] text-white flex items-center justify-center font-bold text-lg shadow-sm border-2 border-white dark:border-[#13141F]">
+              <div class="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-[#7048E8] text-white flex items-center justify-center font-bold text-base shadow-sm border-2 border-white dark:border-[#13141F]">
                 +
               </div>
             </div>
@@ -607,13 +605,13 @@
             </p>
           </div>
 
-          <div class="mt-4 mb-5">
-            <label class="block text-xs font-bold app-header-title mb-2">Room name</label>
-            <input id="createRoomNameInput" type="text" placeholder="e.g. The Boys" class="w-full px-4 py-3.5 rounded-2xl app-input border border-gray-200 focus:outline-none focus:border-[#7048E8] focus:ring-2 focus:ring-purple-100 text-sm font-semibold placeholder-gray-400 transition shadow-sm">
+          <div class="mt-3 mb-4">
+            <label class="block text-xs font-bold app-header-title mb-1.5">Room name</label>
+            <input id="createRoomNameInput" type="text" placeholder="e.g. The Boys" class="w-full px-4 py-3 rounded-2xl app-input border border-gray-200 focus:outline-none focus:border-[#7048E8] focus:ring-2 focus:ring-purple-100 text-sm font-semibold placeholder-gray-400 transition shadow-sm">
           </div>
 
-          <div class="mb-5">
-            <label class="block text-xs font-bold app-header-title mb-2">Choose a timer</label>
+          <div class="mb-4">
+            <label class="block text-xs font-bold app-header-title mb-1.5">Choose a timer</label>
             <div class="grid grid-cols-4 gap-2">
               <button onclick="selectTimerInterval(1)" class="timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition" data-hours="1">1 hour</button>
               <button onclick="selectTimerInterval(2)" class="timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition" data-hours="2">2 hours</button>
@@ -627,7 +625,7 @@
           </div>
 
           <!-- Friends Selection Section: Host + Friends on App (Min 1 friend required) -->
-          <div class="mb-5">
+          <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
               <div>
                 <label class="text-xs font-bold app-header-title">Add friends to room</label>
@@ -656,7 +654,7 @@
             </div>
 
             <!-- Selectable Friends List (Only added friends) -->
-            <div id="createRoomFriendsList" class="space-y-2 max-h-52 overflow-y-auto no-scrollbar py-1">
+            <div id="createRoomFriendsList" class="space-y-2 max-h-48 overflow-y-auto no-scrollbar py-1">
               <!-- Dynamically populated friends with checkboxes -->
             </div>
 
@@ -667,7 +665,7 @@
             </div>
           </div>
 
-          <div class="mb-5">
+          <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
               <label class="text-xs font-bold app-header-title">Room Invite Code</label>
               <span class="text-[11px] app-muted-text">Friends can also join via code</span>
@@ -682,10 +680,13 @@
           </div>
         </div>
 
-        <button id="submitCreateRoomBtn" onclick="handleCreateRoom()" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-sm shadow-circle-sm active:scale-[0.98] transition flex items-center justify-center gap-2">
-          <span>Create room & Post Moment</span>
-          <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </button>
+        <!-- HIGH VISIBILITY ELEVATED BUTTON (BROUGHT UP, NEVER COVERED) -->
+        <div class="sticky bottom-0 z-30 pt-3 pb-6 bg-gradient-to-t from-white via-white/95 dark:from-[#090A10] dark:via-[#090A10]/95 to-transparent -mx-6 px-6 mt-3">
+          <button id="submitCreateRoomBtn" onclick="handleCreateRoom()" class="w-full py-4 rounded-full bg-gradient-to-r from-[#7048E8] to-[#8B5CF6] hover:from-[#5E35D6] hover:to-[#7C3AED] text-white font-black text-sm shadow-circle-glow active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <span>Create Room & Take First Moment 📸</span>
+            <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
       </section>
 
 
@@ -3143,10 +3144,12 @@
         if (screenId === 'profile') renderProfileScreen();
 
         const bottomNav = document.getElementById('bottomNavBar');
-        if (screenId === 'splash' || screenId === 'camera') {
-          bottomNav.classList.add('hidden');
-        } else {
-          bottomNav.classList.remove('hidden');
+        if (bottomNav) {
+          if (screenId === 'splash' || screenId === 'camera' || screenId === 'create-room' || screenId === 'join-room') {
+            bottomNav.classList.add('hidden');
+          } else {
+            bottomNav.classList.remove('hidden');
+          }
         }
       }
     }
@@ -3938,13 +3941,6 @@
       document.getElementById('generatedRoomCode').innerText = generateRandomCode();
       document.getElementById('createRoomNameInput').value = '';
       appState.selectedCreateRoomFriendIds = [];
-
-      playSound('pop');
-      showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
-
-      // Immediately launch live camera screen in Host Obligation mode
-      openLiveCameraScreen(newRoom.id, true);
-    }
 
       playSound('pop');
       showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
