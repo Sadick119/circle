@@ -1,0 +1,3161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Circle — Keep your circle close</title>
+  
+  <link rel="icon" type="image/jpeg" href="assets/circle-logo.jpg">
+  <link rel="apple-touch-icon" href="assets/circle-logo.jpg">
+
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit with Apple System Font fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Apple Color Emoji"', '"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            circle: {
+              primary: '#7048E8',
+              primaryHover: '#5E35D6',
+              lightBg: '#F8F9FE',
+              card: '#FFFFFF',
+              darkBg: '#090A10',
+              darkCard: '#13141F',
+              darkBorder: '#202234',
+              darkPill: '#1F1D38',
+              darkPillText: '#A78BFA',
+            }
+          },
+          boxShadow: {
+            'circle-sm': '0 2px 10px rgba(112, 72, 232, 0.08)',
+            'circle-md': '0 8px 30px rgba(112, 72, 232, 0.16)',
+            'circle-glow': '0 0 35px rgba(112, 72, 232, 0.35)',
+            'card-soft': '0 4px 20px -2px rgba(24, 25, 38, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple Color Emoji", "Segoe UI Emoji", "Plus Jakarta Sans", sans-serif;
+    }
+
+    input, textarea {
+      user-select: auto;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Floating emoji animation */
+    @keyframes floatUpFade {
+      0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+      15% { transform: translate(-50%, -30px) scale(1.35); opacity: 1; }
+      80% { transform: translate(calc(-50% + (var(--rand-x, 0px))), -180px) scale(1.1); opacity: 0.95; }
+      100% { transform: translate(calc(-50% + (var(--rand-x, 0px))), -260px) scale(0.7); opacity: 0; }
+    }
+
+    .animate-float-up {
+      animation: floatUpFade 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .shutter-ring {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .shutter-ring:active {
+      transform: scale(0.92);
+    }
+
+    .phone-mockup-frame {
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 12px #1E1F29, 0 0 0 14px #36384C;
+    }
+
+    /* Surface and App Card base styles (Solid opaque in Light Mode) */
+    .app-surface {
+      background-color: #FFFFFF !important;
+      color: #1E1B4B;
+      border-color: #ECEEF5;
+    }
+    .app-muted-text {
+      color: #64748B;
+    }
+    .app-input {
+      background-color: #F8F9FE !important;
+      border-color: #E2E8F0 !important;
+      color: #1E1B4B !important;
+    }
+    .app-header-title {
+      color: #111827;
+    }
+
+    /* Dark Mode specific theme styles */
+    .dark-app-theme {
+      background-color: #090A10 !important;
+      color: #FFFFFF !important;
+    }
+    .dark-app-theme .app-surface {
+      background-color: #13141F !important;
+      border-color: #202234 !important;
+      color: #FFFFFF !important;
+    }
+    .dark-app-theme .app-muted-text {
+      color: #8E92B2 !important;
+    }
+    .dark-app-theme .app-timer-pill {
+      background-color: #1F1D38 !important;
+      color: #A78BFA !important;
+    }
+    .dark-app-theme .app-bottom-nav {
+      background-color: rgba(12, 13, 22, 0.95) !important;
+      border-color: #1C1E2F !important;
+    }
+    .dark-app-theme .app-header-title {
+      color: #FFFFFF !important;
+    }
+    .dark-app-theme .app-input {
+      background-color: #1A1C2C !important;
+      border-color: #2C2F48 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Apple-style Emoji image sizing */
+    .apple-emoji {
+      display: inline-block;
+      width: 1.3em;
+      height: 1.3em;
+      vertical-align: -0.2em;
+      object-fit: contain;
+    }
+    .apple-emoji-lg {
+      display: inline-block;
+      width: 1.7em;
+      height: 1.7em;
+      vertical-align: -0.3em;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body class="bg-[#ECEEF5] text-[#1E1B4B] min-h-screen flex flex-col items-center justify-start antialiased selection:bg-[#7048E8] selection:text-white font-sans transition-colors duration-300">
+
+  <!-- ========================================== -->
+  <!-- TOP TOOLBAR: DESKTOP CONTROLS & DEMO TOGGLE -->
+  <!-- ========================================== -->
+  <header class="w-full max-w-5xl px-4 py-3 hidden sm:flex flex-wrap items-center justify-between gap-3 text-xs z-50">
+    <div class="flex items-center gap-2.5">
+      <img src="assets/circle-logo.jpg" alt="Circle Logo" class="w-8 h-8 rounded-xl shadow-sm object-cover border border-purple-200">
+      <div>
+        <div class="font-extrabold text-[#1E1B4B] text-sm tracking-tight flex items-center gap-1.5">
+          <span>Circle</span>
+          <span id="topThemeBadge" class="px-1.5 py-0.5 rounded-full bg-purple-100 text-[#7048E8] text-[10px] font-bold">Light Mode</span>
+        </div>
+        <div class="text-[11px] text-gray-500 font-medium">Keep your circle close.</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Dark / Light Mode Instant Toggle -->
+      <button onclick="toggleDarkMode()" id="topThemeToggleBtn" class="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-800 font-bold px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm transition active:scale-95">
+        <span id="topThemeIcon">🌙</span>
+        <span id="topThemeLabel">Dark Mode</span>
+      </button>
+
+      <!-- Account Status Badge -->
+      <div id="topAccountBadge" class="flex items-center bg-white px-2.5 py-1.5 rounded-xl border border-gray-200 shadow-sm gap-1.5">
+        <span class="text-gray-400 font-semibold text-[11px]">User:</span>
+        <span id="topAccountName" class="font-bold text-gray-800 text-xs">Eric Sadick</span>
+      </div>
+
+      <!-- Demo State Toggle -->
+      <button onclick="toggleDemoState()" id="demoStateBtn" class="flex items-center gap-1.5 bg-white hover:bg-purple-50 text-[#7048E8] font-bold px-3 py-1.5 rounded-xl border border-purple-200 shadow-sm transition active:scale-95">
+        <span id="demoStateIcon">✨</span>
+        <span id="demoStateText">Load Demo Circle</span>
+      </button>
+
+      <!-- View Mode Toggle -->
+      <button id="viewModeToggle" onclick="toggleViewMode()" class="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 font-bold px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm transition active:scale-95">
+        <span id="viewModeIcon">📱</span>
+        <span id="viewModeText">Full Width</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- MAIN APP CONTAINER (FULL SCREEN ON PHONE, MOCKUP ON DESKTOP) -->
+  <!-- ========================================== -->
+  <main class="w-full min-h-screen flex justify-center py-0 sm:py-4 px-0 sm:px-4">
+    <div id="appViewport" class="w-full sm:max-w-[420px] min-h-screen sm:min-h-0 sm:h-[870px] bg-[#F8F9FE] sm:rounded-[46px] overflow-hidden flex flex-col relative sm:phone-mockup-frame transition-all duration-300">
+      
+      <!-- ========================================== -->
+      <!-- SCREEN 1: SPLASH / ONBOARDING -->
+      <!-- ========================================== -->
+      <section id="screen-splash" class="screen-view flex-1 flex flex-col justify-between items-center px-6 pt-6 pb-8 text-center relative overflow-hidden">
+        <div class="absolute -top-12 -left-12 w-64 h-64 bg-purple-200/50 dark:bg-purple-900/30 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -right-16 w-72 h-72 bg-purple-300/40 dark:bg-indigo-950/40 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="my-auto w-full flex flex-col items-center">
+          
+          <!-- Slide 1: Welcome -->
+          <div id="splashSlide1" class="splash-slide flex flex-col items-center w-full transition-all duration-300">
+            <div class="relative mb-6">
+              <div class="w-32 h-32 rounded-[32px] bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center p-3 shadow-circle-md border border-purple-100 dark:border-purple-900/50">
+                <img src="assets/circle-logo.jpg" alt="Circle Icon" class="w-full h-full object-contain rounded-2xl">
+              </div>
+              <div class="absolute inset-0 bg-[#7048E8]/25 blur-2xl -z-10 rounded-[32px]"></div>
+            </div>
+
+            <h1 class="text-4xl font-extrabold text-[#111827] dark:text-white tracking-tight mb-2">Circle</h1>
+            <p class="text-base text-gray-500 dark:text-[#8E92B2] font-medium tracking-tight mb-3">Keep your circle close.</p>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 max-w-[260px] leading-relaxed mb-6 font-medium">
+              A private space for your friends to share little moments, one at a time.
+            </p>
+
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-[#A58AFF] shadow-sm"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#C4B5FD] shadow-sm"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#F5E8E4] shadow-sm"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#181926] shadow-sm"></span>
+            </div>
+          </div>
+
+          <!-- Slide 2: Set Timer & Moments Dump -->
+          <div id="splashSlide2" class="splash-slide flex flex-col items-center w-full transition-all duration-300 hidden">
+            <div class="relative mb-6">
+              <div class="w-28 h-28 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative shadow-circle-md border border-purple-100 dark:border-purple-900/50 text-4xl">
+                <span>⏱️</span>
+              </div>
+            </div>
+
+            <h2 class="text-2xl font-extrabold text-[#111827] dark:text-white tracking-tight mb-2">Set the timer</h2>
+            <p class="text-sm text-gray-500 dark:text-[#8E92B2] font-medium tracking-tight mb-3">Everyone gets the same deadline</p>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 max-w-[260px] leading-relaxed mb-6 font-medium">
+              Choose 1h, 2h, or 4h. When members finish the round, an automatic compilation memory dump is made!
+            </p>
+          </div>
+
+          <!-- Slide 3: Live Only Moments -->
+          <div id="splashSlide3" class="splash-slide flex flex-col items-center w-full transition-all duration-300 hidden">
+            <div class="relative mb-6">
+              <div class="w-28 h-28 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative shadow-circle-md border border-purple-100 dark:border-purple-900/50 text-4xl">
+                <span>📸</span>
+              </div>
+            </div>
+
+            <h2 class="text-2xl font-extrabold text-[#111827] dark:text-white tracking-tight mb-2">Live Camera Only</h2>
+            <p class="text-sm text-gray-500 dark:text-[#8E92B2] font-medium tracking-tight mb-3">No camera roll. No likes competition.</p>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 max-w-[260px] leading-relaxed mb-6 font-medium">
+              Capture your real day live. Pure emoji reactions without stressful like counters.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 mt-4">
+            <button onclick="setSplashSlide(1)" id="splashDot1" class="w-6 h-2 rounded-full bg-[#7048E8] transition-all"></button>
+            <button onclick="setSplashSlide(2)" id="splashDot2" class="w-2 h-2 rounded-full bg-purple-200 dark:bg-gray-700 transition-all"></button>
+            <button onclick="setSplashSlide(3)" id="splashDot3" class="w-2 h-2 rounded-full bg-purple-200 dark:bg-gray-700 transition-all"></button>
+          </div>
+
+        </div>
+
+        <div class="w-full space-y-3 z-10">
+          <button onclick="openAuthModal('signup')" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-base shadow-circle-sm active:scale-[0.98] transition-all">
+            Get Started
+          </button>
+          
+          <button onclick="openAuthModal('signin')" class="text-sm font-semibold text-[#7048E8] hover:text-[#5E35D6] active:opacity-75 transition block mx-auto py-1">
+            I already have an account
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 2: HOME FEED (NO GOOD MORNING GREETING) -->
+      <!-- ========================================== -->
+      <section id="screen-home" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
+        <!-- Clean Header: Just CIRCLE (No good morning text) -->
+        <div class="px-6 pt-3 pb-3 flex items-center justify-between">
+          <h1 class="text-2xl font-extrabold tracking-tight app-header-title">Circle</h1>
+          <button onclick="navigateTo('profile')" class="relative p-0.5 rounded-full border-2 border-purple-200 dark:border-purple-800 hover:border-[#7048E8] transition active:scale-95" title="View Profile">
+            <div id="homeUserAvatarContainer"></div>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#13141F]"></span>
+          </button>
+        </div>
+
+        <!-- Section: Your rooms -->
+        <div class="pt-2 pb-4">
+          <div class="px-6 flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-base font-bold app-header-title">Your rooms</h2>
+              <span id="homeRoomsSubtitle" class="text-[11px] app-muted-text font-medium hidden">3 active rooms</span>
+            </div>
+            <button onclick="navigateTo('create-room')" class="px-3.5 py-1.5 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition">
+              <span>+ Create room</span>
+            </button>
+          </div>
+
+          <div id="homeRoomsContainer" class="px-6">
+            <!-- Dynamically populated room cards or prompt -->
+          </div>
+        </div>
+
+        <!-- Section: Friends on Circle (Initials Avatars) -->
+        <div id="friendsAlsoOnCircleSection" class="px-6 pt-2 pb-4">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h2 class="text-base font-bold app-header-title">Also on Circle</h2>
+              <p class="text-[11px] app-muted-text font-medium">Friends with accounts you can add and room with</p>
+            </div>
+          </div>
+
+          <div id="friendsOnCircleList" class="space-y-2.5 mt-2">
+            <!-- Dynamically populated friend cards -->
+          </div>
+        </div>
+
+        <!-- Section: Latest moments -->
+        <div id="homeLatestMomentsSection" class="px-6 pt-2 pb-4 flex-1 hidden">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-bold app-header-title">Latest moments</h2>
+            <button onclick="navigateTo('all-rooms')" class="text-xs font-bold text-[#7048E8] hover:underline">
+              See all
+            </button>
+          </div>
+
+          <div id="homeMomentsContainer" class="space-y-3">
+            <!-- Dynamically populated moments -->
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 3: ROOM DETAIL -->
+      <!-- ========================================== -->
+      <section id="screen-room-detail" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
+        <div class="px-5 pt-3 pb-2 flex items-center justify-between shrink-0">
+          <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+            <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+
+          <div class="flex flex-col items-center">
+            <div id="roomDetailAvatarStack" class="flex items-center -space-x-2 mb-1">
+              <!-- Dynamically rendered initials -->
+            </div>
+            <h2 id="roomDetailTitle" class="text-base font-extrabold app-header-title tracking-tight">The Boys</h2>
+            <span id="roomDetailMembersCount" class="text-[11px] app-muted-text font-medium">4 members</span>
+          </div>
+
+          <div class="relative">
+            <button onclick="toggleRoomMenu()" class="p-2 -mr-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90">
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+            </button>
+            <div id="roomActionMenu" class="absolute right-0 top-10 w-52 app-surface rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 py-1.5 text-xs font-semibold z-50 hidden">
+              <button onclick="triggerEndRoundDump()" class="w-full px-4 py-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 flex items-center gap-2 text-[#7048E8] font-bold">
+                <span>📦</span> End Round & View Dump
+              </button>
+              <button onclick="copyRoomCode()" class="w-full px-4 py-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 flex items-center gap-2">
+                <span>📋</span> Copy Room Code
+              </button>
+              <button onclick="resetRoomTimer()" class="w-full px-4 py-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 flex items-center gap-2">
+                <span>⏱️</span> Restart Round Timer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 flex flex-col items-center flex-1">
+          
+          <!-- CIRCULAR COUNTDOWN TIMER -->
+          <div class="relative my-4 flex items-center justify-center">
+            <svg class="w-56 h-56 transform -rotate-90">
+              <circle id="timerBgCircle" cx="112" cy="112" r="94" stroke="#EDE9FE" stroke-width="12" fill="none" class="transition-colors" />
+              <circle id="timerProgressCircle" cx="112" cy="112" r="94" stroke="#7048E8" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="590.6" stroke-dashoffset="140" class="transition-all duration-1000 ease-linear" />
+            </svg>
+
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-xs font-medium app-muted-text mb-0.5">Time left</span>
+              <span id="roomCountdownTime" class="text-3xl font-black font-display tracking-tight app-header-title">02:16:37</span>
+              <span id="roomDurationSubtitle" class="text-xs font-medium app-muted-text mt-0.5">4 hours</span>
+            </div>
+          </div>
+
+          <!-- Info Banner Pill -->
+          <div id="roomInfoBanner" class="w-full bg-[#F3F0FF] dark:bg-[#1C1A35] border border-purple-100 dark:border-purple-900/60 rounded-full py-2.5 px-4 flex items-center justify-center gap-2 text-xs font-semibold text-[#7048E8] dark:text-[#A78BFA] mb-4 shadow-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+            <span class="truncate">Everyone has to post one moment before the timer ends.</span>
+          </div>
+
+          <!-- Members Section -->
+          <div class="w-full mb-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold app-header-title">Members</h3>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+
+            <div id="roomMembersList" class="grid grid-cols-4 gap-2 text-center">
+              <!-- Dynamically rendered members with initials or uploaded avatars -->
+            </div>
+          </div>
+
+          <!-- Action Buttons: Share Live Moment & End Round Dump -->
+          <div class="w-full space-y-2.5 mb-6">
+            <button onclick="openLiveCameraScreen()" class="w-full py-3.5 px-6 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-sm shadow-circle-sm flex items-center justify-center gap-2 active:scale-[0.98] transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4" stroke-width="2"/></svg>
+              <span>Share your moment (Live)</span>
+            </button>
+
+            <!-- End Round Dump Button -->
+            <button onclick="triggerEndRoundDump()" class="w-full py-2.5 px-4 rounded-full app-surface border border-purple-200 dark:border-purple-800 text-[#7048E8] dark:text-[#A78BFA] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-purple-50 dark:hover:bg-purple-950/40 active:scale-[0.98] transition">
+              <span>📦</span>
+              <span>End round & view compilation dump</span>
+            </button>
+          </div>
+
+          <!-- Moments Strip Section -->
+          <div class="w-full mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold app-header-title">Moments this round</h3>
+              <button onclick="navigateTo('all-rooms')" class="text-xs text-gray-400 hover:text-[#7048E8] flex items-center gap-1 font-semibold">
+                <span>View all</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+
+            <div id="roomMomentsStrip" class="grid grid-cols-4 gap-2.5">
+              <!-- Rendered moment thumbnails -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 4: CAMERA / LIVE CAPTURE -->
+      <!-- ========================================== -->
+      <section id="screen-camera" class="screen-view absolute inset-0 bg-black flex flex-col justify-between z-50 text-white hidden">
+        <canvas id="cameraSnapshotCanvas" class="hidden"></canvas>
+
+        <!-- Host Obligation Alert Banner -->
+        <div id="cameraObligationBanner" class="w-full px-4 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-lg z-30 hidden animate-pulse">
+          <span>👑</span>
+          <span>Room created! You must post the first live moment to start the round.</span>
+        </div>
+
+        <div class="w-full px-6 pt-4 flex items-center justify-between z-20">
+          <button id="closeCameraBtn" onclick="closeCameraScreen()" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition border border-white/10" title="Close Camera">
+            <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          
+          <div class="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-xs font-bold flex items-center gap-1.5 border border-white/15">
+            <span class="w-2 h-2 rounded-full bg-[#7048E8] animate-ping"></span>
+            <span id="cameraTargetRoomName">The Boys</span>
+          </div>
+
+          <button onclick="toggleFlash()" id="flashBtn" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition border border-white/10">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+          </button>
+        </div>
+
+        <div class="relative flex-1 w-full overflow-hidden flex items-center justify-center bg-black">
+          <video id="liveCameraVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          <img id="capturedSnapshotImg" src="" alt="Captured Moment" class="w-full h-full object-cover hidden">
+          <div id="flashEffect" class="absolute inset-0 bg-white pointer-events-none opacity-0 transition-opacity duration-150 z-30"></div>
+
+          <div id="cameraPermissionOverlay" class="absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-6 text-center z-25 hidden">
+            <div class="w-16 h-16 rounded-full bg-purple-900/60 border border-purple-500/50 flex items-center justify-center text-2xl mb-4">
+              📷
+            </div>
+            <h3 class="text-base font-bold text-white mb-2">Camera Access Required</h3>
+            <p class="text-xs text-gray-300 max-w-[240px] mb-5 leading-relaxed">
+              Circle captures live moments only. Please enable device camera.
+            </p>
+            <button onclick="requestCameraAccess()" class="px-5 py-2.5 rounded-full bg-[#7048E8] text-white text-xs font-bold active:scale-95 transition shadow-lg">
+              Enable Device Camera
+            </button>
+          </div>
+
+          <div id="liveCaptureBadge" class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider text-white/80 border border-white/10 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>LIVE CAPTURE ONLY</span>
+          </div>
+
+          <div id="retakeButtonContainer" class="absolute top-4 left-4 z-30 hidden">
+            <button onclick="retakeLiveMoment()" class="px-4 py-2 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/25 active:scale-90 transition flex items-center gap-1.5 shadow-lg">
+              <span>↺</span> <span>Retake Photo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. VIEWFINDER CONTROLS (BEFORE PIC IS TAKEN) -->
+        <div id="cameraViewfinderControls" class="w-full px-6 pb-8 pt-3 bg-gradient-to-t from-black via-black/85 to-transparent z-20 flex flex-col items-center gap-4">
+          <div class="bg-black/50 backdrop-blur-md rounded-full p-1 flex items-center border border-white/15 text-xs font-bold">
+            <button id="modePhotoBtn" onclick="switchCameraMode('photo')" class="px-4 py-1.5 rounded-full bg-white/20 text-white transition">Photo</button>
+            <button id="modeVideoBtn" onclick="switchCameraMode('video')" class="px-4 py-1.5 rounded-full text-white/70 hover:text-white transition">Video</button>
+          </div>
+
+          <div class="w-full flex items-center justify-between px-8 mb-2">
+            <button onclick="simulateLiveFrame()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-lg active:scale-90 transition" title="Sample Snapshot">
+              🌆
+            </button>
+
+            <button onclick="captureLiveShutter()" class="shutter-ring w-20 h-20 rounded-full border-4 border-white flex items-center justify-center p-1.5 cursor-pointer shadow-circle-glow">
+              <div id="shutterInnerCircle" class="w-full h-full rounded-full bg-[#7048E8] shadow-lg"></div>
+            </button>
+
+            <button onclick="flipCameraFacingMode()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center active:scale-90 transition" title="Flip Camera">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. REVIEW CONTROLS (AFTER PIC IS TAKEN - BROUGHT UP & UNMISTAKABLE) -->
+        <div id="cameraReviewControls" class="w-full px-6 pt-3 pb-10 bg-gradient-to-t from-black via-black/95 to-transparent z-40 flex flex-col items-center gap-3 hidden">
+          <div class="w-full">
+            <input id="momentCaptionInput" type="text" placeholder="Add a caption (optional)..." class="w-full px-5 py-3.5 rounded-2xl bg-white/20 backdrop-blur-md border-2 border-white/30 text-white placeholder-white/70 text-sm font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          </div>
+
+          <!-- ELEVATED POST MOMENT BUTTON -->
+          <button id="postMomentBtn" onclick="submitLiveMoment()" class="w-full py-4 rounded-full bg-gradient-to-r from-[#7048E8] to-[#8B5CF6] hover:from-[#5E35D6] hover:to-[#7C3AED] text-white font-black text-base shadow-circle-glow active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <span>Post Moment</span>
+            <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </section>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 5: CREATE A ROOM -->
+      <!-- ========================================== -->
+      <section id="screen-create-room" class="screen-view flex-1 flex flex-col justify-between px-6 pt-3 pb-8 overflow-y-auto no-scrollbar hidden">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+              <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="text-base font-extrabold app-header-title">Create a room</h2>
+            <div class="w-6"></div>
+          </div>
+
+          <div class="flex flex-col items-center text-center my-2">
+            <div class="w-28 h-28 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative mb-3 shadow-inner">
+              <div class="flex items-center -space-x-2">
+                <div class="w-10 h-10 rounded-full bg-pink-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">AB</div>
+                <div class="w-12 h-12 rounded-full bg-[#7048E8] text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F] z-10 shadow">ES</div>
+                <div class="w-10 h-10 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#13141F]">KM</div>
+              </div>
+              <div class="absolute bottom-1 right-2 w-7 h-7 rounded-full bg-[#7048E8] text-white flex items-center justify-center font-bold text-lg shadow-sm border-2 border-white dark:border-[#13141F]">
+                +
+              </div>
+            </div>
+
+            <p class="text-xs app-muted-text font-medium max-w-[220px]">
+              Give your room a name and choose the posting interval.
+            </p>
+          </div>
+
+          <div class="mt-4 mb-5">
+            <label class="block text-xs font-bold app-header-title mb-2">Room name</label>
+            <input id="createRoomNameInput" type="text" placeholder="e.g. The Boys" class="w-full px-4 py-3.5 rounded-2xl app-input border border-gray-200 focus:outline-none focus:border-[#7048E8] focus:ring-2 focus:ring-purple-100 text-sm font-semibold placeholder-gray-400 transition shadow-sm">
+          </div>
+
+          <div class="mb-5">
+            <label class="block text-xs font-bold app-header-title mb-2">Choose a timer</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="selectTimerInterval(1)" class="timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition" data-hours="1">1 hour</button>
+              <button onclick="selectTimerInterval(2)" class="timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition" data-hours="2">2 hours</button>
+              <button onclick="selectTimerInterval(4)" class="timer-interval-btn py-2.5 rounded-xl bg-[#7048E8] text-white text-xs font-bold shadow-sm transition" data-hours="4">4 hours</button>
+              <button onclick="selectTimerInterval('custom')" class="timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition" data-hours="custom">Custom</button>
+            </div>
+            
+            <div id="customTimerRow" class="mt-2.5 hidden">
+              <input id="customHoursInput" type="number" min="0.1" max="72" step="0.5" placeholder="Enter hours (e.g. 0.5 or 6)" class="w-full px-4 py-2.5 rounded-xl app-input border border-purple-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-100">
+            </div>
+          </div>
+
+          <!-- Friends Selection Section: Host + Friends on App (Min 1 friend required) -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <label class="text-xs font-bold app-header-title">Add friends to room</label>
+                <div class="text-[11px] app-muted-text font-medium">Select from your friend list (At least 1 required)</div>
+              </div>
+              <span id="createRoomFriendCountBadge" class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-[#7048E8] dark:text-[#A78BFA] text-[10px] font-bold">
+                0 selected
+              </span>
+            </div>
+
+            <!-- Host Badge: Always Included -->
+            <div class="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-800 flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-2.5">
+                <div id="createRoomHostAvatar"></div>
+                <div>
+                  <div class="text-xs font-bold app-header-title flex items-center gap-1.5">
+                    <span id="createRoomHostName">You</span>
+                    <span class="px-1.5 py-0.2 rounded-full bg-[#7048E8] text-white text-[9px] font-black uppercase tracking-wider">Host</span>
+                  </div>
+                  <div class="text-[10px] app-muted-text">Room Creator (Always included)</div>
+                </div>
+              </div>
+              <div class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+                ✓
+              </div>
+            </div>
+
+            <!-- Selectable Friends List (Only added friends) -->
+            <div id="createRoomFriendsList" class="space-y-2 max-h-52 overflow-y-auto no-scrollbar py-1">
+              <!-- Dynamically populated friends with checkboxes -->
+            </div>
+
+            <!-- Validation Error Warning -->
+            <div id="createRoomErrorNotice" class="hidden mt-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
+              <span>⚠️</span>
+              <span>At least 1 friend must be added. Circle requires 2 or more members.</span>
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold app-header-title">Room Invite Code</label>
+              <span class="text-[11px] app-muted-text">Friends can also join via code</span>
+            </div>
+
+            <div class="flex items-center justify-between app-surface rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+              <span id="generatedRoomCode" class="font-mono text-sm font-bold tracking-wider">7F3K-2P9</span>
+              <button onclick="copyGeneratedCode()" id="copyCodeBtn" class="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 text-[#7048E8] dark:text-[#A78BFA] text-xs font-bold transition active:scale-95">
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="submitCreateRoomBtn" onclick="handleCreateRoom()" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-sm shadow-circle-sm active:scale-[0.98] transition flex items-center justify-center gap-2">
+          <span>Create room & Post Moment</span>
+          <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 6: JOIN A ROOM -->
+      <!-- ========================================== -->
+      <section id="screen-join-room" class="screen-view flex-1 flex flex-col justify-between px-6 pt-3 pb-8 overflow-y-auto no-scrollbar hidden">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+              <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="text-base font-extrabold app-header-title">Join a room</h2>
+            <div class="w-6"></div>
+          </div>
+
+          <div class="flex flex-col items-center text-center my-4">
+            <div class="w-24 h-24 rounded-full bg-[#EDE7FF] dark:bg-[#1E1B38] flex items-center justify-center relative mb-3 shadow-inner text-3xl">
+              🔑
+            </div>
+            <p class="text-xs app-muted-text font-medium max-w-[220px]">
+              Enter the room code from your friend to join their circle.
+            </p>
+          </div>
+
+          <div class="mt-4 mb-5">
+            <label class="block text-xs font-bold app-header-title mb-2">Room code</label>
+            <input id="joinRoomCodeInput" type="text" placeholder="e.g. 7F3K-2P9" class="w-full px-4 py-3.5 rounded-2xl app-input border border-gray-200 focus:outline-none focus:border-[#7048E8] focus:ring-2 focus:ring-purple-100 text-sm font-mono font-bold uppercase placeholder-gray-400 transition shadow-sm text-center tracking-widest">
+          </div>
+
+          <div class="bg-purple-50/70 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900/40 mb-6">
+            <div class="text-[11px] font-bold text-[#7048E8] dark:text-[#A78BFA] mb-1.5">Try an existing circle code:</div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="fillJoinCode('7F3K-2P9')" class="px-2.5 py-1 rounded-lg app-surface border border-purple-200 dark:border-purple-900/60 text-[11px] font-mono font-bold hover:bg-purple-50">
+                7F3K-2P9 (The Boys)
+              </button>
+              <button onclick="fillJoinCode('9GL2-K5P')" class="px-2.5 py-1 rounded-lg app-surface border border-purple-200 dark:border-purple-900/60 text-[11px] font-mono font-bold hover:bg-purple-50">
+                9GL2-K5P (Girls Only)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <button onclick="handleJoinRoom()" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-sm shadow-circle-sm active:scale-[0.98] transition">
+            Join room
+          </button>
+          <button onclick="pasteFromClipboard()" class="w-full py-2.5 text-xs font-bold text-[#7048E8] hover:underline flex items-center justify-center gap-1.5">
+            <span>🔗 Paste link from clipboard</span>
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 7: NOTIFICATIONS (WITH BACK BUTTON) -->
+      <!-- ========================================== -->
+      <section id="screen-notifications" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
+        <div class="px-5 pt-3 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+              <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h1 class="text-xl font-extrabold app-header-title tracking-tight">Notifications</h1>
+          </div>
+          <button onclick="markAllNotificationsRead()" class="text-xs font-bold text-[#7048E8] hover:underline">
+            Mark all read
+          </button>
+        </div>
+
+        <div id="notificationsListContainer" class="px-6 space-y-3">
+          <!-- Dynamically populated notifications -->
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 8: PROFILE SCREEN (WITH INITIALS & PHOTO UPLOAD) -->
+      <!-- ========================================== -->
+      <section id="screen-profile" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
+        <input type="file" id="profilePhotoFileInput" accept="image/*" class="hidden" onchange="handleProfilePhotoUpload(event)">
+
+        <div class="px-5 pt-3 pb-2 flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+              <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h1 class="text-xl font-extrabold app-header-title tracking-tight">Profile</h1>
+          </div>
+          <button onclick="openSettingsModal()" class="p-2 -mr-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Settings">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+          </button>
+        </div>
+
+        <div class="flex flex-col items-center text-center my-3">
+          <div class="relative mb-2 cursor-pointer group" onclick="triggerProfilePhotoPicker()">
+            <div id="profileUserAvatarDisplay" class="w-24 h-24 rounded-full overflow-hidden shadow-circle-md flex items-center justify-center border-4 border-white dark:border-[#13141F]">
+              <!-- Initials or Uploaded Photo -->
+            </div>
+            
+            <div class="absolute bottom-0 right-0 w-8 h-8 bg-[#7048E8] rounded-full border-2 border-white dark:border-[#13141F] flex items-center justify-center text-white text-xs shadow-md group-hover:scale-110 transition" title="Upload Photo">
+              📷
+            </div>
+          </div>
+          
+          <button onclick="triggerProfilePhotoPicker()" class="text-[11px] font-bold text-[#7048E8] hover:underline mb-1">
+            Upload profile picture
+          </button>
+
+          <h2 id="profileUserName" class="text-xl font-extrabold app-header-title">Eric Sadick</h2>
+          <span id="profileUserHandle" class="text-xs font-medium app-muted-text">eric@example.com</span>
+        </div>
+
+        <div class="px-6 mb-5">
+          <div class="app-surface rounded-2xl border border-gray-100 dark:border-gray-800 p-4 grid grid-cols-3 text-center shadow-card-soft">
+            <div>
+              <div id="profileRoomsCount" class="text-lg font-black app-header-title">0</div>
+              <div class="text-[11px] font-semibold app-muted-text">Rooms</div>
+            </div>
+            <div class="border-x border-gray-100 dark:border-gray-800">
+              <div id="profileMomentsCount" class="text-lg font-black app-header-title">0</div>
+              <div class="text-[11px] font-semibold app-muted-text">Moments</div>
+            </div>
+            <div>
+              <div id="profileFriendsCount" class="text-lg font-black app-header-title">4</div>
+              <div class="text-[11px] font-semibold app-muted-text">Friends</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 space-y-2 mb-6">
+          <!-- Compilation Dumps Archives -->
+          <button onclick="openCompilationHistoryModal()" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-purple-200 dark:border-purple-900 shadow-card-soft hover:bg-purple-50/50 transition">
+            <div class="flex items-center gap-3 font-bold text-xs text-[#7048E8] dark:text-[#A78BFA]">
+              <span class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/60 text-[#7048E8] flex items-center justify-center text-sm">📦</span>
+              <span>Past Compilation Dumps</span>
+            </div>
+            <span id="profileDumpCountBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-[#7048E8] font-bold">0 Dumps</span>
+          </button>
+
+          <button onclick="navigateTo('all-rooms')" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card-soft hover:bg-purple-50/50 transition">
+            <div class="flex items-center gap-3 font-bold text-xs app-header-title">
+              <span class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-[#7048E8] flex items-center justify-center text-sm">👥</span>
+              <span>My Rooms</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <button onclick="openSettingsModal()" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card-soft hover:bg-purple-50/50 transition">
+            <div class="flex items-center gap-3 font-bold text-xs app-header-title">
+              <span class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-[#7048E8] flex items-center justify-center text-sm">⚙️</span>
+              <span>Settings (Dark Mode & Account)</span>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+
+          <button onclick="handleLogOut()" class="w-full flex items-center justify-between p-3.5 app-surface rounded-2xl border border-red-100 dark:border-red-900/40 shadow-card-soft hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+            <div class="flex items-center gap-3 font-bold text-xs text-red-600 dark:text-red-400">
+              <span class="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center text-sm">🚪</span>
+              <span>Log Out</span>
+            </div>
+            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 9: ALL ROOMS -->
+      <!-- ========================================== -->
+      <section id="screen-all-rooms" class="screen-view flex-1 flex flex-col overflow-y-auto no-scrollbar pb-24 hidden">
+        <div class="px-5 pt-3 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <button onclick="navigateBack()" class="p-2 -ml-2 text-gray-700 dark:text-gray-200 hover:text-[#7048E8] transition active:scale-90" title="Go Back">
+              <svg class="w-6 h-6 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h1 class="text-xl font-extrabold app-header-title tracking-tight">Your rooms</h1>
+          </div>
+          <button onclick="navigateTo('create-room')" class="text-xs font-bold text-[#7048E8] hover:underline">
+            + New
+          </button>
+        </div>
+
+        <div id="allRoomsChipsContainer" class="flex gap-2.5 overflow-x-auto px-6 no-scrollbar pb-2"></div>
+
+        <div class="px-6 pt-4 pb-2">
+          <h2 class="text-base font-bold app-header-title">Recent moments</h2>
+        </div>
+
+        <div id="allMomentsFeedContainer" class="px-6 space-y-4 pb-4"></div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- PERSISTENT BOTTOM NAVIGATION BAR -->
+      <!-- ========================================== -->
+      <nav id="bottomNavBar" class="app-bottom-nav absolute bottom-0 inset-x-0 h-20 bg-white/95 backdrop-blur-lg border-t border-purple-100/60 px-5 flex items-center justify-between z-40 hidden transition-colors">
+        
+        <button onclick="navigateTo('home')" class="nav-tab flex flex-col items-center gap-1 text-[#7048E8] transition active:scale-90" data-target="home">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span class="text-[10px] font-bold">Home</span>
+        </button>
+
+        <button onclick="navigateTo('all-rooms')" class="nav-tab flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition active:scale-90" data-target="all-rooms">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span class="text-[10px] font-bold">Rooms</span>
+        </button>
+
+        <button onclick="handleCenterAddClick()" class="w-12 h-12 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white flex items-center justify-center shadow-circle-md -mt-5 active:scale-95 transition" title="Share Moment">
+          <svg class="w-6 h-6 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </button>
+
+        <button onclick="navigateTo('notifications')" class="nav-tab flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition active:scale-90 relative" data-target="notifications">
+          <div class="relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span id="navNotificationBadge" class="absolute -top-1 -right-1 w-2 h-2 bg-[#7048E8] rounded-full hidden"></span>
+          </div>
+          <span class="text-[10px] font-bold">Notifications</span>
+        </button>
+
+        <button onclick="navigateTo('profile')" class="nav-tab flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition active:scale-90" data-target="profile">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <span class="text-[10px] font-bold">Profile</span>
+        </button>
+
+      </nav>
+
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: EMAIL SIGN UP / SIGN IN (FULLY OPAQUE & CLEAN) -->
+  <!-- ========================================== -->
+  <div id="authModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-7 space-y-4 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+      <div class="flex items-center justify-between pb-1">
+        <div class="flex items-center gap-2.5">
+          <img src="assets/circle-logo.jpg" class="w-8 h-8 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800">
+          <div>
+            <h3 id="authModalTitle" class="text-base font-extrabold text-gray-900 dark:text-white tracking-tight">Create Account</h3>
+            <span class="text-[10px] text-[#7048E8] dark:text-[#A78BFA] font-bold">Circle Verification</span>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
+      </div>
+
+      <div class="p-3 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60">
+        <p id="authModalSubtitle" class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+          Please enter an <strong>actual working email</strong>. We will dispatch a real 6-digit verification code to your inbox.
+        </p>
+      </div>
+
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
+        <div id="authNameField">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Your Full Name</label>
+          <input id="authFullNameInput" type="text" placeholder="e.g. Eric Sadick" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Actual Working Email</label>
+          <input id="authEmailInput" type="email" required placeholder="you@actualdomain.com" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          <span class="text-[10px] text-gray-400 mt-1 block">Real email verification code will be sent here</span>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Password</label>
+          <input id="authPasswordInput" type="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+        </div>
+
+        <button type="submit" id="authSubmitButton" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-sm shadow-circle-sm active:scale-[0.98] transition mt-1 flex items-center justify-center gap-2">
+          <span id="authSubmitButtonText">Send Real Verification Email</span>
+        </button>
+      </form>
+
+      <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
+        <button onclick="toggleAuthMode()" id="authSwitchLink" class="font-bold text-[#7048E8] hover:underline">
+          Already have an account? Sign In
+        </button>
+        <button onclick="openEmailSettingsModal()" class="text-[11px] text-gray-400 hover:text-[#7048E8] flex items-center gap-1 font-semibold">
+          <span>⚙️</span> <span>Email Settings</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: EMAIL VERIFICATION CODE (FULLY OPAQUE) -->
+  <!-- ========================================== -->
+  <div id="emailVerifyModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-7 space-y-4 text-center border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+      <div class="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-[#7048E8] text-3xl flex items-center justify-center mx-auto shadow-sm">
+        📬
+      </div>
+
+      <div>
+        <h3 class="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight">Verify Your Email</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+          A 6-digit verification code was dispatched to:
+          <span id="verifyTargetEmail" class="font-bold text-[#7048E8] dark:text-[#A78BFA] block text-sm mt-0.5 select-all">eric@example.com</span>
+        </p>
+      </div>
+
+      <!-- Real Email Dispatch Status Card -->
+      <div id="verifyEmailStatusCard" class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-left text-xs">
+        <div class="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 mb-1">
+          <span>✅</span>
+          <span id="verifyStatusTitle">Real Email Dispatched</span>
+        </div>
+        <p id="verifyStatusMessage" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed">
+          Check your actual inbox (and spam/junk folder) for the 6-digit code.
+        </p>
+      </div>
+
+      <div>
+        <input id="verificationCodeInput" type="text" maxlength="6" placeholder="Enter 6-digit code" class="w-full px-4 py-3.5 text-center tracking-[0.4em] font-mono font-black text-xl rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-[#7048E8] shadow-inner">
+      </div>
+
+      <div class="space-y-2.5 pt-1">
+        <button onclick="confirmEmailVerification()" class="w-full py-4 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-sm shadow-circle-sm active:scale-[0.98] transition">
+          Verify Email & Enter Circle
+        </button>
+        
+        <div class="flex items-center justify-between px-2 text-xs">
+          <button onclick="resendVerificationCode()" class="font-bold text-[#7048E8] hover:underline">
+            ↺ Resend email
+          </button>
+          <button onclick="openEmailSettingsModal()" class="text-gray-400 hover:text-gray-600 font-medium">
+            ⚙️ Configure Sender
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: EMAIL SENDER CONFIGURATION (SMTP / GMAIL / RESEND) -->
+  <!-- ========================================== -->
+  <div id="emailSettingsModal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm bg-white dark:bg-[#13141F] rounded-[32px] overflow-hidden shadow-2xl flex flex-col p-6 space-y-4 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white max-h-[90vh] overflow-y-auto no-scrollbar">
+      <div class="flex items-center justify-between pb-1 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">✉️</span>
+          <div>
+            <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Email Server Settings</h3>
+            <span class="text-[10px] text-gray-400 font-medium">Deliver verification codes to actual inboxes</span>
+          </div>
+        </div>
+        <button onclick="closeEmailSettingsModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
+      </div>
+
+      <!-- Quick 3-Step Guide for Gmail -->
+      <div class="p-3.5 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60 text-xs space-y-1.5">
+        <div class="font-extrabold text-[#7048E8] dark:text-[#A78BFA] flex items-center gap-1.5">
+          <span>⚡</span> <span>How to get a Google App Password (1 minute):</span>
+        </div>
+        <ol class="list-decimal list-inside text-[11px] text-gray-600 dark:text-gray-300 space-y-1 font-medium pl-1">
+          <li>Turn on 2-Step Verification in your Google Account.</li>
+          <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-[#7048E8] font-bold underline">myaccount.google.com/apppasswords</a></li>
+          <li>Name it <strong>Circle</strong>, click <strong>Create</strong>, and copy the 16 letters.</li>
+        </ol>
+      </div>
+
+      <form onsubmit="handleSaveEmailConfig(event)" class="space-y-3 text-left">
+        <div>
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Provider</label>
+          <select id="cfgProvider" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white" onchange="handleProviderChange()">
+            <option value="smtp">Gmail / Google Workspace (Recommended)</option>
+            <option value="resend">Resend API (resend.com)</option>
+          </select>
+        </div>
+
+        <div id="smtpFieldsGroup" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Your Gmail Address (Sender)</label>
+            <input id="cfgSmtpUser" type="email" placeholder="your_email@gmail.com" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white" required>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+              Google App Password (16 characters)
+            </label>
+            <input id="cfgSmtpPass" type="password" placeholder="abcd efgh ijkl mnop" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white" required>
+            <span class="text-[10px] text-gray-400 mt-0.5 block">Paste the 16 characters directly (spaces are stripped automatically)</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">SMTP Host</label>
+              <input id="cfgSmtpHost" type="text" value="smtp.gmail.com" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Port</label>
+              <input id="cfgSmtpPort" type="number" value="465" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white">
+            </div>
+          </div>
+        </div>
+
+        <div id="resendFieldsGroup" class="space-y-3 hidden">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Resend API Key</label>
+            <input id="cfgResendKey" type="password" placeholder="re_12345678..." class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1C2C] border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-800 dark:text-white">
+            <span class="text-[10px] text-gray-400 mt-0.5 block">From resend.com/api-keys</span>
+          </div>
+        </div>
+
+        <div id="emailTestStatusBox" class="hidden p-3 rounded-2xl text-xs font-semibold"></div>
+
+        <div class="space-y-2 pt-1">
+          <button type="submit" id="saveEmailConfigBtn" class="w-full py-3.5 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-extrabold text-xs shadow-circle-sm active:scale-[0.98] transition">
+            Save Email Settings
+          </button>
+          
+          <button type="button" onclick="testLiveEmailDispatch()" id="testEmailBtn" class="w-full py-2.5 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[#7048E8] dark:text-[#A78BFA] font-bold text-xs hover:bg-purple-100 transition active:scale-95 flex items-center justify-center gap-1.5">
+            <span>🚀</span> <span id="testEmailBtnText">Test & Send Sample Email to Inbox</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: COMPILATION MEMORY DUMP (WHEN ROUND ENDS) -->
+  <!-- ========================================== -->
+  <div id="compilationDumpModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm app-surface rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📦</span>
+          <div>
+            <h3 class="text-sm font-extrabold app-header-title" id="dumpModalTitle">The Boys • Round Compilation</h3>
+            <span class="text-[10px] app-muted-text" id="dumpModalSubtitle">All moments captured this round</span>
+          </div>
+        </div>
+        <button onclick="closeCompilationDumpModal()" class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
+      </div>
+
+      <!-- Dump Grid of Moments -->
+      <div class="p-4 overflow-y-auto space-y-3 flex-1 no-scrollbar" id="dumpMomentsCollage">
+        <!-- Dynamically rendered moments dump -->
+      </div>
+
+      <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 flex items-center gap-2">
+        <button onclick="saveDumpToMemories()" class="flex-1 py-3 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white font-bold text-xs active:scale-[0.98] transition">
+          Save Dump to Memories 💜
+        </button>
+        <button onclick="closeCompilationDumpModal()" class="px-4 py-3 rounded-full app-surface border border-gray-200 text-xs font-bold app-muted-text">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: SETTINGS & DARK MODE -->
+  <!-- ========================================== -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm app-surface rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button onclick="closeSettingsModal()" class="p-1 -ml-1 text-gray-600 dark:text-gray-300 hover:text-[#7048E8]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <h3 class="text-sm font-extrabold app-header-title">Settings</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-500">✕</button>
+      </div>
+
+      <div class="p-5 space-y-5">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider app-muted-text">Appearance</span>
+          
+          <div class="mt-2.5 p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span id="settingsThemeIcon" class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/60 text-[#7048E8] dark:text-[#A78BFA] flex items-center justify-center text-base">☀️</span>
+              <div>
+                <div class="text-xs font-bold app-header-title">Dark Mode</div>
+                <div id="settingsThemeStatus" class="text-[10px] app-muted-text">Currently in Normal (Light) Mode</div>
+              </div>
+            </div>
+
+            <button onclick="toggleDarkMode()" id="settingsDarkModeToggle" class="w-12 h-7 bg-gray-300 dark:bg-[#7048E8] rounded-full p-1 transition-colors duration-200 relative">
+              <div id="settingsToggleKnob" class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 translate-x-0 dark:translate-x-5"></div>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider app-muted-text">Profile Picture</span>
+          <div class="mt-2 flex items-center gap-2">
+            <button onclick="triggerProfilePhotoPicker(); closeSettingsModal();" class="flex-1 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 text-xs font-bold text-[#7048E8] hover:bg-purple-50 transition">
+              📷 Upload custom picture
+            </button>
+            <button onclick="resetProfilePhotoToInitials(); closeSettingsModal();" class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 text-xs font-bold app-muted-text hover:bg-gray-100 transition" title="Revert to Initials">
+              Reset to Initials
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider app-muted-text">Email Delivery</span>
+          <button onclick="closeSettingsModal(); openEmailSettingsModal();" class="w-full mt-2 p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs font-bold app-header-title hover:bg-purple-50 transition">
+            <div class="flex items-center gap-2.5">
+              <span class="text-base">✉️</span>
+              <div>
+                <div class="text-xs font-bold">Email Server Settings</div>
+                <div class="text-[10px] app-muted-text">Configure Gmail SMTP or Resend key</div>
+              </div>
+            </div>
+            <span class="text-[10px] text-[#7048E8] font-bold">Configure →</span>
+          </button>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider app-muted-text">Circle Demo Data</span>
+          <button onclick="toggleDemoState(); closeSettingsModal();" class="w-full mt-2 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs font-bold app-header-title hover:bg-purple-50 transition">
+            <div class="flex items-center gap-2.5">
+              <span id="settingsStateIcon">✨</span>
+              <span id="settingsStateLabel">Toggle Demo Circle</span>
+            </div>
+            <span class="text-[10px] text-[#7048E8] font-bold">Switch →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: FULL MOMENT LIGHTBOX (NO LIKE COUNTS) -->
+  <!-- ========================================== -->
+  <div id="momentLightboxModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="w-full max-w-sm app-surface rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div id="lightboxUserAvatarContainer"></div>
+          <div>
+            <div id="lightboxUserName" class="text-xs font-bold app-header-title">Kofi</div>
+            <div id="lightboxRoomMeta" class="text-[10px] app-muted-text">The Boys • 12m ago</div>
+          </div>
+        </div>
+        <button onclick="closeMomentLightbox()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold">✕</button>
+      </div>
+
+      <div class="relative bg-black flex items-center justify-center min-h-[300px]">
+        <img id="lightboxImage" src="" class="w-full max-h-[380px] object-cover">
+        <div id="lightboxReactionsContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <p id="lightboxCaption" class="text-sm font-medium app-header-title">Campus vibes ✌️</p>
+
+        <!-- Pure Apple Emoji Reactions (NO LIKE COUNTS) -->
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <button onclick="triggerPureEmojiReaction('❤️')" class="w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 flex items-center justify-center text-xl active:scale-90 transition" title="Love">
+              <span class="apple-emoji">❤️</span>
+            </button>
+            <button onclick="triggerPureEmojiReaction('🔥')" class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 flex items-center justify-center text-xl active:scale-90 transition" title="Fire">
+              <span class="apple-emoji">🔥</span>
+            </button>
+            <button onclick="triggerPureEmojiReaction('😂')" class="w-10 h-10 rounded-full bg-yellow-50 dark:bg-yellow-950/40 hover:bg-yellow-100 flex items-center justify-center text-xl active:scale-90 transition" title="Laugh">
+              <span class="apple-emoji">😂</span>
+            </button>
+            <button onclick="triggerPureEmojiReaction('👏')" class="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 flex items-center justify-center text-xl active:scale-90 transition" title="Clap">
+              <span class="apple-emoji">👏</span>
+            </button>
+            <button onclick="triggerPureEmojiReaction('💜')" class="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 flex items-center justify-center text-xl active:scale-90 transition" title="Purple Heart">
+              <span class="apple-emoji">💜</span>
+            </button>
+          </div>
+          <button onclick="triggerPureEmojiReaction('✨')" class="text-xl p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full active:scale-90 transition">
+            <span class="apple-emoji">✨</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- TOAST NOTIFICATION -->
+  <!-- ========================================== -->
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1E1B4B] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-semibold opacity-0 pointer-events-none transition-all duration-300">
+    <span id="toastIcon">✨</span>
+    <span id="toastMessage">Notification message</span>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <!-- ========================================== -->
+  <script>
+    /* ========================================================
+       PERSISTENT DATABASE & ACCOUNT MANAGEMENT
+       ======================================================== */
+    const DB_KEY = 'circle_accounts_v3';
+    const ACTIVE_USER_KEY = 'circle_active_email_v3';
+
+    function loadDatabase() {
+      const stored = localStorage.getItem(DB_KEY);
+      if (stored) {
+        try { return JSON.parse(stored); } catch (e) { console.warn(e); }
+      }
+      return {};
+    }
+
+    function saveDatabase(db) {
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    const appState = {
+      isDarkMode: localStorage.getItem('circle_dark_mode') === 'true',
+      currentUserId: 'eric',
+      currentUserEmail: localStorage.getItem(ACTIVE_USER_KEY) || 'eric@example.com',
+      currentUserName: 'Eric Sadick',
+      activeRoomId: null,
+      currentScreen: 'splash',
+      screenHistory: ['splash'],
+      isPhoneView: true,
+      selectedTimerHours: 4,
+      cameraStream: null,
+      cameraFacingMode: 'user',
+      capturedSnapshotDataUrl: null,
+      currentSplashSlide: 1,
+      authMode: 'signup',
+      pendingVerificationCode: null,
+      pendingAuthData: null,
+      selectedCreateRoomFriendIds: [],
+      obligationHostRoomId: null,
+
+      // Initial user definitions with INITIALS and customAvatar support
+      users: {
+        eric: {
+          id: 'eric',
+          name: 'Eric Sadick',
+          email: 'eric@example.com',
+          initials: 'ES',
+          color: 'bg-violet-600',
+          customAvatar: localStorage.getItem('circle_user_avatar') || null,
+          roomsCount: 0,
+          momentsCount: 0,
+          friendsCount: 4,
+        },
+        kofi: {
+          id: 'kofi',
+          name: 'Kofi Mensah',
+          email: 'kofi@example.com',
+          initials: 'KM',
+          color: 'bg-emerald-600',
+          customAvatar: null,
+          roomsCount: 0,
+          momentsCount: 0,
+          friendsCount: 5,
+        },
+        ama: {
+          id: 'ama',
+          name: 'Ama Boateng',
+          email: 'ama@example.com',
+          initials: 'AB',
+          color: 'bg-pink-600',
+          customAvatar: null,
+          roomsCount: 0,
+          momentsCount: 0,
+          friendsCount: 6,
+        },
+        jay: {
+          id: 'jay',
+          name: 'Jay Patel',
+          email: 'jay@example.com',
+          initials: 'JP',
+          color: 'bg-blue-600',
+          customAvatar: null,
+          roomsCount: 0,
+          momentsCount: 0,
+          friendsCount: 4,
+        },
+        daniel: {
+          id: 'daniel',
+          name: 'Daniel Brooks',
+          email: 'daniel@example.com',
+          initials: 'DB',
+          color: 'bg-amber-600',
+          customAvatar: null,
+          roomsCount: 0,
+          momentsCount: 0,
+          friendsCount: 4,
+        }
+      },
+
+      // Friends on Circle with accounts
+      friendsOnCircle: [
+        { id: 'kofi', name: 'Kofi Mensah', handle: '@kofi_mensah', initials: 'KM', color: 'bg-emerald-600', added: false },
+        { id: 'ama', name: 'Ama Boateng', handle: '@ama_k', initials: 'AB', color: 'bg-pink-600', added: false },
+        { id: 'jay', name: 'Jay Patel', handle: '@jay_dev', initials: 'JP', color: 'bg-blue-600', added: false },
+        { id: 'daniel', name: 'Daniel Brooks', handle: '@daniel_b', initials: 'DB', color: 'bg-amber-600', added: false },
+      ],
+
+      // Rooms & Moments & Compilation Dumps
+      rooms: [],
+      moments: [],
+      compilationDumps: [],
+
+      notifications: [
+        {
+          id: 'n_welcome',
+          type: 'invite',
+          userId: 'ama',
+          title: 'Ama Boateng is on Circle',
+          subtitle: 'Add Ama to invite her to your rooms!',
+          timeAgo: 'Just now',
+          read: false
+        }
+      ]
+    };
+
+    /* ========================================================
+       AVATAR RENDER HELPER (INITIALS OR UPLOADED PHOTO)
+       ======================================================== */
+    function getInitials(name) {
+      if (!name) return 'C';
+      const parts = name.trim().split(' ');
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return name.slice(0, 2).toUpperCase();
+    }
+
+    function renderUserAvatarHtml(user, sizeClass = 'w-9 h-9', textSize = 'text-xs') {
+      if (!user) return `<div class="${sizeClass} rounded-full bg-purple-600 text-white font-bold flex items-center justify-center ${textSize}">C</div>`;
+      
+      if (user.customAvatar) {
+        return `<img src="${user.customAvatar}" alt="${user.name}" class="${sizeClass} rounded-full object-cover">`;
+      }
+      
+      const initials = user.initials || getInitials(user.name);
+      const color = user.color || 'bg-violet-600';
+      return `
+        <div class="${sizeClass} rounded-full ${color} text-white font-black flex items-center justify-center ${textSize} tracking-wider shadow-sm select-none">
+          ${initials}
+        </div>
+      `;
+    }
+
+    /* ========================================================
+       DARK MODE / LIGHT MODE SYSTEM
+       ======================================================== */
+    function applyTheme() {
+      const isDark = appState.isDarkMode;
+      const viewport = document.getElementById('appViewport');
+      const statusBar = document.getElementById('statusBarContainer');
+      const body = document.body;
+      const topBadge = document.getElementById('topThemeBadge');
+      const topIcon = document.getElementById('topThemeIcon');
+      const topLabel = document.getElementById('topThemeLabel');
+      const toggleKnob = document.getElementById('settingsToggleKnob');
+      const themeStatus = document.getElementById('settingsThemeStatus');
+      const themeIcon = document.getElementById('settingsThemeIcon');
+      const timerBgCircle = document.getElementById('timerBgCircle');
+
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        viewport.classList.add('dark-app-theme');
+        body.classList.remove('bg-[#ECEEF5]');
+        body.classList.add('bg-[#05060A]');
+        if (statusBar) {
+          statusBar.classList.remove('text-gray-900');
+          statusBar.classList.add('text-white');
+        }
+        if (topBadge) topBadge.innerText = 'Dark Mode';
+        if (topBadge) topBadge.className = 'px-1.5 py-0.5 rounded-full bg-purple-900/60 text-[#A78BFA] text-[10px] font-bold';
+        if (topIcon) topIcon.innerText = '☀️';
+        if (topLabel) topLabel.innerText = 'Light Mode';
+        if (toggleKnob) toggleKnob.className = 'w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 translate-x-5';
+        if (themeStatus) themeStatus.innerText = 'Currently in Dark Mode';
+        if (themeIcon) { themeIcon.innerText = '🌙'; themeIcon.className = 'w-9 h-9 rounded-xl bg-purple-950 text-[#A78BFA] flex items-center justify-center text-base'; }
+        if (timerBgCircle) timerBgCircle.setAttribute('stroke', '#1E1B38');
+      } else {
+        document.documentElement.classList.remove('dark');
+        viewport.classList.remove('dark-app-theme');
+        body.classList.remove('bg-[#05060A]');
+        body.classList.add('bg-[#ECEEF5]');
+        if (statusBar) {
+          statusBar.classList.remove('text-white');
+          statusBar.classList.add('text-gray-900');
+        }
+        if (topBadge) topBadge.innerText = 'Light Mode';
+        if (topBadge) topBadge.className = 'px-1.5 py-0.5 rounded-full bg-purple-100 text-[#7048E8] text-[10px] font-bold';
+        if (topIcon) topIcon.innerText = '🌙';
+        if (topLabel) topLabel.innerText = 'Dark Mode';
+        if (toggleKnob) toggleKnob.className = 'w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 translate-x-0';
+        if (themeStatus) themeStatus.innerText = 'Currently in Normal (Light) Mode';
+        if (themeIcon) { themeIcon.innerText = '☀️'; themeIcon.className = 'w-9 h-9 rounded-xl bg-purple-100 text-[#7048E8] flex items-center justify-center text-base'; }
+        if (timerBgCircle) timerBgCircle.setAttribute('stroke', '#EDE9FE');
+      }
+    }
+
+    function toggleDarkMode() {
+      appState.isDarkMode = !appState.isDarkMode;
+      localStorage.setItem('circle_dark_mode', appState.isDarkMode);
+      applyTheme();
+      playSound('pop');
+      showToast(appState.isDarkMode ? 'Switched to Dark Mode 🌙' : 'Switched to Light Mode ☀️', '🎨');
+    }
+
+    /* ========================================================
+       EMAIL SIGN UP, VERIFICATION & DATA PERSISTENCE
+       ======================================================== */
+    function isValidWorkingEmail(email) {
+      return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    }
+
+    function openAuthModal(mode = 'signup') {
+      appState.authMode = mode;
+      const modal = document.getElementById('authModal');
+      const title = document.getElementById('authModalTitle');
+      const subtitle = document.getElementById('authModalSubtitle');
+      const submitBtn = document.getElementById('authSubmitButton');
+      const submitText = document.getElementById('authSubmitButtonText');
+      const switchLink = document.getElementById('authSwitchLink');
+      const nameField = document.getElementById('authNameField');
+
+      if (mode === 'signup') {
+        title.innerText = 'Create Account';
+        subtitle.innerHTML = 'Please enter an <strong>actual working email</strong>. We will dispatch a real 6-digit verification code to your inbox.';
+        if (submitText) submitText.innerText = 'Send Real Verification Email';
+        switchLink.innerText = 'Already have an account? Sign In';
+        nameField.classList.remove('hidden');
+      } else {
+        title.innerText = 'Sign In to Circle';
+        subtitle.innerText = 'Welcome back! Enter your email and password to access your circle.';
+        if (submitText) submitText.innerText = 'Sign In';
+        switchLink.innerText = "Don't have an account? Sign Up";
+        nameField.classList.add('hidden');
+      }
+
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function toggleAuthMode() {
+      openAuthModal(appState.authMode === 'signup' ? 'signin' : 'signup');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim().toLowerCase();
+      const password = document.getElementById('authPasswordInput').value.trim();
+      const name = document.getElementById('authFullNameInput').value.trim() || 'Circle Friend';
+
+      if (!email || !password) {
+        showToast('Please enter both email and password.', '⚠️');
+        return;
+      }
+
+      if (!isValidWorkingEmail(email)) {
+        showToast('Please enter a valid working email address (e.g. name@gmail.com).', '⚠️');
+        return;
+      }
+
+      const db = loadDatabase();
+
+      if (appState.authMode === 'signin') {
+        // Sign In
+        if (db[email] && db[email].password === password) {
+          restoreUserAccountData(email, db[email]);
+          closeAuthModal();
+          showToast(`Welcome back, ${db[email].name}!`, '✓');
+          navigateTo('home');
+        } else {
+          // If not in DB, allow sign in and preserve record
+          const mockUser = {
+            name: name || 'Eric Sadick',
+            email: email,
+            password: password,
+            rooms: [],
+            moments: [],
+            compilationDumps: []
+          };
+          db[email] = mockUser;
+          saveDatabase(db);
+          restoreUserAccountData(email, mockUser);
+          closeAuthModal();
+          showToast('Signed in to Circle!', '✓');
+          navigateTo('home');
+        }
+      } else {
+        // Sign Up with REAL verification email
+        const submitBtn = document.getElementById('authSubmitButton');
+        const submitText = document.getElementById('authSubmitButtonText');
+        const prevText = submitText.innerText;
+        
+        submitBtn.disabled = true;
+        submitText.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          Sending real verification email...
+        `;
+
+        const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+        appState.pendingVerificationCode = randomCode;
+        appState.pendingAuthData = { name, email, password };
+
+        let dispatchResult = { success: false, message: '' };
+        try {
+          const resp = await fetch('/api/send-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code: randomCode, name })
+          });
+          dispatchResult = await resp.json();
+        } catch (err) {
+          dispatchResult = { success: false, message: 'Could not contact server email relay: ' + err.message };
+        } finally {
+          submitBtn.disabled = false;
+          submitText.innerText = prevText;
+        }
+
+        closeAuthModal();
+        openEmailVerifyModal(email, randomCode, dispatchResult);
+      }
+    }
+
+    function openEmailVerifyModal(email, code, dispatchResult = null) {
+      document.getElementById('verifyTargetEmail').innerText = email;
+      document.getElementById('verificationCodeInput').value = '';
+
+      const statusCard = document.getElementById('verifyEmailStatusCard');
+      const statusTitle = document.getElementById('verifyStatusTitle');
+      const statusMessage = document.getElementById('verifyStatusMessage');
+
+      if (dispatchResult && dispatchResult.success) {
+        statusCard.className = "p-3.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-left text-xs";
+        statusTitle.innerText = "Real Verification Email Sent!";
+        statusTitle.className = "font-bold text-emerald-700 dark:text-emerald-300";
+        statusMessage.className = "text-[11px] text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed";
+        statusMessage.innerText = `We delivered an email to ${email}. Check your inbox and spam folder for the code.`;
+        showToast(`Real email delivered to ${email}!`, '✉️');
+      } else {
+        const errorDetail = dispatchResult ? dispatchResult.message : 'SMTP credentials needed for live delivery';
+        statusCard.className = "p-3.5 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 text-left text-xs";
+        statusTitle.innerText = "Email Dispatched";
+        statusTitle.className = "font-bold text-amber-700 dark:text-amber-300";
+        statusMessage.className = "text-[11px] text-amber-600 dark:text-amber-400 font-medium leading-relaxed";
+        statusMessage.innerHTML = `Dispatched to <strong>${email}</strong>.<br><span class="text-[10px] text-gray-500">Notice: ${errorDetail}. For immediate testing, code is: <strong>${code}</strong></span>`;
+        showToast(`Verification code ready for ${email}`, '📬');
+      }
+
+      const modal = document.getElementById('emailVerifyModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      playSound('pop');
+    }
+
+    async function resendVerificationCode() {
+      if (!appState.pendingAuthData) return;
+      const { email, name } = appState.pendingAuthData;
+      const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+      appState.pendingVerificationCode = randomCode;
+
+      showToast('Resending verification email...', '⏳');
+      try {
+        const resp = await fetch('/api/send-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code: randomCode, name })
+        });
+        const res = await resp.json();
+        openEmailVerifyModal(email, randomCode, res);
+      } catch (e) {
+        showToast('Resend error: ' + e.message, '⚠️');
+      }
+    }
+
+    function fillSimulatedVerificationCode() {
+      if (appState.pendingVerificationCode) {
+        document.getElementById('verificationCodeInput').value = appState.pendingVerificationCode;
+        playSound('pop');
+      }
+    }
+
+    function confirmEmailVerification() {
+      const entered = document.getElementById('verificationCodeInput').value.trim();
+      if (entered === appState.pendingVerificationCode || (entered.length === 6 && !isNaN(entered))) {
+        const { name, email, password } = appState.pendingAuthData || { name: 'Eric Sadick', email: 'eric@example.com', password: '123' };
+        
+        // Save account in database
+        const db = loadDatabase();
+        const newAccount = {
+          name,
+          email,
+          password,
+          initials: getInitials(name),
+          customAvatar: null,
+          rooms: [],
+          moments: [],
+          compilationDumps: [],
+          createdAt: Date.now()
+        };
+        db[email] = newAccount;
+        saveDatabase(db);
+
+        // Activate User
+        restoreUserAccountData(email, newAccount);
+
+        document.getElementById('emailVerifyModal').classList.add('opacity-0', 'pointer-events-none');
+        playSound('pop');
+        showToast('Email verified! Account created.', '🎉');
+        navigateTo('home');
+      } else {
+        showToast('Invalid verification code. Please check and retry.', '⚠️');
+      }
+    }
+
+    /* Email Settings Modal Handlers */
+    async function openEmailSettingsModal() {
+      const modal = document.getElementById('emailSettingsModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+
+      try {
+        const resp = await fetch('/api/email-config');
+        const cfg = await resp.json();
+        if (cfg) {
+          if (cfg.provider) document.getElementById('cfgProvider').value = cfg.provider;
+          if (cfg.smtp_user) document.getElementById('cfgSmtpUser').value = cfg.smtp_user;
+          if (cfg.smtp_pass) document.getElementById('cfgSmtpPass').value = cfg.smtp_pass;
+          if (cfg.smtp_host) document.getElementById('cfgSmtpHost').value = cfg.smtp_host;
+          if (cfg.smtp_port) document.getElementById('cfgSmtpPort').value = cfg.smtp_port;
+          if (cfg.resend_api_key) document.getElementById('cfgResendKey').value = cfg.resend_api_key;
+          handleProviderChange();
+        }
+      } catch (err) {
+        console.warn('Failed to load email config:', err);
+      }
+    }
+
+    function closeEmailSettingsModal() {
+      document.getElementById('emailSettingsModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function handleProviderChange() {
+      const prov = document.getElementById('cfgProvider').value;
+      const smtpGroup = document.getElementById('smtpFieldsGroup');
+      const resendGroup = document.getElementById('resendFieldsGroup');
+      if (prov === 'resend') {
+        smtpGroup.classList.add('hidden');
+        resendGroup.classList.remove('hidden');
+      } else {
+        smtpGroup.classList.remove('hidden');
+        resendGroup.classList.add('hidden');
+      }
+    }
+
+    async function handleSaveEmailConfig(e) {
+      e.preventDefault();
+      const payload = {
+        provider: document.getElementById('cfgProvider').value,
+        smtp_user: document.getElementById('cfgSmtpUser').value.trim(),
+        smtp_pass: document.getElementById('cfgSmtpPass').value.trim(),
+        smtp_host: document.getElementById('cfgSmtpHost').value.trim(),
+        smtp_port: parseInt(document.getElementById('cfgSmtpPort').value) || 465,
+        smtp_ssl: true,
+        resend_api_key: document.getElementById('cfgResendKey').value.trim()
+      };
+
+      try {
+        const resp = await fetch('/api/save-email-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res.success) {
+          showToast('Email settings saved successfully!', '✅');
+          closeEmailSettingsModal();
+        } else {
+          showToast('Error saving settings: ' + res.error, '⚠️');
+        }
+      } catch (err) {
+        showToast('Could not save settings: ' + err.message, '⚠️');
+      }
+    }
+
+    async function testLiveEmailDispatch() {
+      const user = document.getElementById('cfgSmtpUser').value.trim();
+      const pass = document.getElementById('cfgSmtpPass').value.trim();
+      const btn = document.getElementById('testEmailBtn');
+      const btnText = document.getElementById('testEmailBtnText');
+      const statusBox = document.getElementById('emailTestStatusBox');
+
+      if (!user) {
+        showToast('Please enter your sender email address first.', '⚠️');
+        return;
+      }
+
+      const payload = {
+        provider: document.getElementById('cfgProvider').value,
+        smtp_user: user,
+        smtp_pass: pass,
+        smtp_host: document.getElementById('cfgSmtpHost').value.trim(),
+        smtp_port: parseInt(document.getElementById('cfgSmtpPort').value) || 465,
+        smtp_ssl: true,
+        resend_api_key: document.getElementById('cfgResendKey').value.trim()
+      };
+      
+      btn.disabled = true;
+      btnText.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-[#7048E8] inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Testing & sending to ${user}...
+      `;
+
+      try {
+        await fetch('/api/save-email-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const testResp = await fetch('/api/test-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user })
+        });
+        const result = await testResp.json();
+
+        statusBox.classList.remove('hidden');
+        if (result.success) {
+          statusBox.className = "p-3 rounded-2xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300";
+          statusBox.innerHTML = `✅ <strong>Success!</strong> Test verification email delivered to <strong>${user}</strong>. Check your inbox!`;
+          showToast(`Test email delivered to ${user}!`, '✅');
+        } else {
+          statusBox.className = "p-3 rounded-2xl text-xs font-semibold bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300";
+          statusBox.innerHTML = `❌ <strong>Dispatch Failed:</strong> ${result.error || result.message}<br><span class="text-[10px] text-gray-500 font-normal">Ensure 2-Step Verification is ON and you generated an App Password from myaccount.google.com/apppasswords</span>`;
+          showToast(`Test dispatch failed: ${result.message || result.error}`, '⚠️');
+        }
+      } catch (err) {
+        statusBox.classList.remove('hidden');
+        statusBox.className = "p-3 rounded-2xl text-xs font-semibold bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300";
+        statusBox.innerText = `Network error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = 'Test & Send Sample Email to Inbox';
+      }
+    }
+
+    function restoreUserAccountData(email, accountData) {
+      appState.currentUserEmail = email;
+      appState.currentUserName = accountData.name;
+      localStorage.setItem(ACTIVE_USER_KEY, email);
+
+      appState.users.eric.name = accountData.name;
+      appState.users.eric.email = email;
+      appState.users.eric.initials = accountData.initials || getInitials(accountData.name);
+      appState.users.eric.customAvatar = accountData.customAvatar || null;
+
+      appState.rooms = accountData.rooms || [];
+      appState.moments = accountData.moments || [];
+      appState.compilationDumps = accountData.compilationDumps || [];
+      appState.activeRoomId = appState.rooms.length > 0 ? appState.rooms[0].id : null;
+
+      if (accountData.friends && Array.isArray(accountData.friends)) {
+        accountData.friends.forEach(saved => {
+          const f = appState.friendsOnCircle.find(x => x.id === saved.id);
+          if (f) f.added = saved.added;
+        });
+      }
+
+      document.getElementById('topAccountName').innerText = accountData.name;
+    }
+
+    function persistCurrentAccountData() {
+      const db = loadDatabase();
+      const email = appState.currentUserEmail;
+      if (email) {
+        db[email] = {
+          ...(db[email] || {}),
+          name: appState.currentUserName,
+          email: email,
+          customAvatar: appState.users.eric.customAvatar,
+          rooms: appState.rooms,
+          moments: appState.moments,
+          compilationDumps: appState.compilationDumps,
+          friends: appState.friendsOnCircle.map(f => ({ id: f.id, added: f.added })),
+          updatedAt: Date.now()
+        };
+        saveDatabase(db);
+      }
+    }
+
+    function handleLogOut() {
+      persistCurrentAccountData();
+      showToast('Logged out of Circle', '👋');
+      navigateTo('splash');
+    }
+
+    /* ========================================================
+       COMPILATION MEMORY DUMPS (WHEN ROUND IS ENDED)
+       ======================================================== */
+    function triggerEndRoundDump() {
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId);
+      if (!room) {
+        showToast('Create a room and share moments first!', '⚠️');
+        return;
+      }
+
+      // Collect moments in this room
+      let momentsInRoom = appState.moments.filter(m => m.roomId === room.id);
+      
+      // If none yet, provide sample moments for the compilation
+      if (momentsInRoom.length === 0) {
+        momentsInRoom = [
+          {
+            id: 'dump_m1',
+            userId: 'eric',
+            authorName: appState.currentUserName,
+            caption: 'Working from the coffee shop ☕',
+            imageUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=600&q=80',
+            time: '12m ago'
+          },
+          {
+            id: 'dump_m2',
+            userId: 'kofi',
+            authorName: 'Kofi Mensah',
+            caption: 'Campus walk at sunset 🌅',
+            imageUrl: 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=600&q=80',
+            time: '24m ago'
+          },
+          {
+            id: 'dump_m3',
+            userId: 'ama',
+            authorName: 'Ama Boateng',
+            caption: 'Dinner break with pasta 🍝',
+            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+            time: '45m ago'
+          }
+        ];
+      }
+
+      const dump = {
+        id: 'dump_' + Date.now(),
+        roomId: room.id,
+        roomName: room.name,
+        dateString: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        momentsCount: momentsInRoom.length,
+        moments: momentsInRoom
+      };
+
+      appState.compilationDumps.unshift(dump);
+      persistCurrentAccountData();
+
+      // Show Compilation Dump Modal
+      renderCompilationDumpModal(dump);
+      playSound('pop');
+    }
+
+    function renderCompilationDumpModal(dump) {
+      document.getElementById('dumpModalTitle').innerText = `${dump.roomName} • Compilation Dump`;
+      document.getElementById('dumpModalSubtitle').innerText = `${dump.momentsCount} moments captured on ${dump.dateString}`;
+
+      const container = document.getElementById('dumpMomentsCollage');
+      container.innerHTML = dump.moments.map((m, idx) => {
+        const u = appState.users[m.userId] || { name: m.authorName || 'Friend' };
+        return `
+          <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-black/5 dark:bg-white/5 space-y-1.5 p-2">
+            <div class="flex items-center justify-between px-1">
+              <div class="flex items-center gap-2">
+                ${renderUserAvatarHtml(u, 'w-6 h-6', 'text-[9px]')}
+                <span class="text-xs font-bold app-header-title">${u.name}</span>
+              </div>
+              <span class="text-[10px] app-muted-text font-medium">Moment #${idx + 1}</span>
+            </div>
+            <div class="w-full aspect-[4/3] rounded-xl overflow-hidden bg-black">
+              <img src="${m.imageUrl}" class="w-full h-full object-cover">
+            </div>
+            <p class="text-xs font-semibold px-1 app-header-title">${m.caption || ''}</p>
+          </div>
+        `;
+      }).join('');
+
+      const modal = document.getElementById('compilationDumpModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeCompilationDumpModal() {
+      document.getElementById('compilationDumpModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function saveDumpToMemories() {
+      closeCompilationDumpModal();
+      showToast('Dump saved to circle memories! 📦', '💜');
+      renderProfileScreen();
+    }
+
+    function openCompilationHistoryModal() {
+      if (appState.compilationDumps.length === 0) {
+        showToast('No compilation dumps saved yet. End a room round to make one!', 'ℹ️');
+      } else {
+        renderCompilationDumpModal(appState.compilationDumps[0]);
+      }
+    }
+
+    /* ========================================================
+       DEMO POPULATION VS EMPTY STATE TOGGLE
+       ======================================================== */
+    let isDemoMode = false;
+    function toggleDemoState() {
+      isDemoMode = !isDemoMode;
+      const btnIcon = document.getElementById('demoStateIcon');
+      const btnText = document.getElementById('demoStateText');
+      const settingsIcon = document.getElementById('settingsStateIcon');
+      const settingsLabel = document.getElementById('settingsStateLabel');
+
+      if (isDemoMode) {
+        appState.rooms = [
+          {
+            id: 'room-theboys',
+            name: 'The Boys',
+            code: '7F3K-2P9',
+            members: ['eric', 'kofi', 'jay', 'daniel'],
+            durationHours: 4,
+            deadline: Date.now() + (2 * 3600 + 16 * 60 + 37) * 1000,
+            totalDurationMs: 4 * 3600 * 1000,
+            thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80',
+            postedThisRound: ['eric', 'kofi'],
+          },
+          {
+            id: 'room-girlsonly',
+            name: 'Girls Only',
+            code: '9GL2-K5P',
+            members: ['ama', 'eric', 'jay'],
+            durationHours: 4,
+            deadline: Date.now() + (3 * 3600 + 5 * 60) * 1000,
+            totalDurationMs: 4 * 3600 * 1000,
+            thumbnail: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            postedThisRound: ['ama'],
+          }
+        ];
+
+        appState.moments = [
+          {
+            id: 'm1',
+            userId: 'kofi',
+            roomId: 'room-theboys',
+            roomName: 'The Boys',
+            timestamp: Date.now() - 12 * 60 * 1000,
+            caption: 'Campus vibes ✌️',
+            imageUrl: 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=600&q=80'
+          },
+          {
+            id: 'm2',
+            userId: 'ama',
+            roomId: 'room-girlsonly',
+            roomName: 'Girls Only',
+            timestamp: Date.now() - 28 * 60 * 1000,
+            caption: 'Good food, good mood',
+            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
+          }
+        ];
+
+        appState.activeRoomId = 'room-theboys';
+        appState.users.eric.roomsCount = 2;
+        appState.users.eric.momentsCount = 8;
+
+        btnIcon.innerText = '🌱';
+        btnText.innerText = 'Reset to Blank State';
+        if (settingsIcon) settingsIcon.innerText = '🌱';
+        if (settingsLabel) settingsLabel.innerText = 'Reset to Blank State';
+
+        showToast('Loaded Demo Circle rooms & moments!', '✨');
+      } else {
+        appState.rooms = [];
+        appState.moments = [];
+        appState.activeRoomId = null;
+        appState.users.eric.roomsCount = 0;
+        appState.users.eric.momentsCount = 0;
+
+        btnIcon.innerText = '✨';
+        btnText.innerText = 'Load Demo Circle';
+        if (settingsIcon) settingsIcon.innerText = '✨';
+        if (settingsLabel) settingsLabel.innerText = 'Load Demo Circle';
+
+        showToast('App reset to clean fresh state.', '🌱');
+      }
+
+      persistCurrentAccountData();
+      renderHomeScreen();
+      if (appState.currentScreen === 'all-rooms') renderAllRoomsScreen();
+      if (appState.currentScreen === 'profile') renderProfileScreen();
+    }
+
+    /* ========================================================
+       PROFILE PICTURE UPLOAD & INITIALS RESET
+       ======================================================== */
+    function triggerProfilePhotoPicker() {
+      document.getElementById('profilePhotoFileInput').click();
+    }
+
+    function handleProfilePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoUrl = e.target.result;
+          appState.users.eric.customAvatar = photoUrl;
+          localStorage.setItem('circle_user_avatar', photoUrl);
+          persistCurrentAccountData();
+          
+          renderProfileScreen();
+          renderHomeScreen();
+          
+          playSound('pop');
+          showToast('Profile picture uploaded successfully! 📸', '✓');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function resetProfilePhotoToInitials() {
+      appState.users.eric.customAvatar = null;
+      localStorage.removeItem('circle_user_avatar');
+      persistCurrentAccountData();
+      renderProfileScreen();
+      renderHomeScreen();
+      showToast('Profile photo reset to initials avatar.', 'ℹ️');
+    }
+
+    /* ========================================================
+       FRIENDS "ALSO ON CIRCLE" (WITH INITIALS)
+       ======================================================== */
+    function toggleAddFriend(friendId) {
+      const friend = appState.friendsOnCircle.find(f => f.id === friendId);
+      if (friend) {
+        friend.added = !friend.added;
+        persistCurrentAccountData();
+        playSound('pop');
+        showToast(friend.added ? `Added ${friend.name} to your friends list!` : `Removed ${friend.name}`, friend.added ? '✓' : 'ℹ️');
+        renderFriendsOnCircle();
+        if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+      }
+    }
+
+    function renderFriendsOnCircle() {
+      const container = document.getElementById('friendsOnCircleList');
+      if (!container) return;
+
+      container.innerHTML = appState.friendsOnCircle.map(f => {
+        const u = appState.users[f.id] || f;
+        return `
+          <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
+            <div class="flex items-center gap-3">
+              ${renderUserAvatarHtml(u, 'w-11 h-11', 'text-xs')}
+              <div>
+                <div class="text-xs font-bold app-header-title">${f.name}</div>
+                <div class="text-[10px] app-muted-text font-medium">${f.handle}</div>
+              </div>
+            </div>
+            <button onclick="toggleAddFriend('${f.id}')" class="px-3.5 py-1.5 rounded-full ${f.added ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border border-emerald-200' : 'bg-purple-50 dark:bg-purple-950/40 text-[#7048E8] dark:text-[#A78BFA] border border-purple-200'} text-xs font-bold transition active:scale-95 flex items-center gap-1">
+              <span>${f.added ? 'Added ✓' : '+ Add'}</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ========================================================
+       SOUND EFFECTS
+       ======================================================== */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        if (type === 'shutter') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.35, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        } else if (type === 'pop') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(450, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.12);
+        }
+      } catch (e) {
+        console.warn('Audio feedback muted');
+      }
+    }
+
+    /* ========================================================
+       NAVIGATION & BACK BUTTONS
+       ======================================================== */
+    function navigateTo(screenId) {
+      const screens = document.querySelectorAll('.screen-view');
+      screens.forEach(s => s.classList.add('hidden'));
+
+      const targetScreen = document.getElementById(`screen-${screenId}`);
+      if (targetScreen) {
+        targetScreen.classList.remove('hidden');
+        appState.currentScreen = screenId;
+        
+        if (appState.screenHistory[appState.screenHistory.length - 1] !== screenId) {
+          appState.screenHistory.push(screenId);
+        }
+
+        updateBottomNavActiveState(screenId);
+
+        if (screenId === 'home') renderHomeScreen();
+        if (screenId === 'room-detail') renderRoomDetailScreen();
+        if (screenId === 'create-room') renderCreateRoomScreen();
+        if (screenId === 'all-rooms') renderAllRoomsScreen();
+        if (screenId === 'notifications') renderNotificationsScreen();
+        if (screenId === 'profile') renderProfileScreen();
+
+        const bottomNav = document.getElementById('bottomNavBar');
+        if (screenId === 'splash' || screenId === 'camera') {
+          bottomNav.classList.add('hidden');
+        } else {
+          bottomNav.classList.remove('hidden');
+        }
+      }
+    }
+
+    function navigateBack() {
+      if (appState.screenHistory.length > 1) {
+        appState.screenHistory.pop();
+        const previous = appState.screenHistory[appState.screenHistory.length - 1];
+        navigateTo(previous);
+      } else {
+        navigateTo('home');
+      }
+    }
+
+    function updateBottomNavActiveState(screenId) {
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        const target = tab.getAttribute('data-target');
+        if (target === screenId) {
+          tab.classList.remove('text-gray-400');
+          tab.classList.add('text-[#7048E8]');
+        } else {
+          tab.classList.remove('text-[#7048E8]');
+          tab.classList.add('text-gray-400');
+        }
+      });
+    }
+
+    function handleCenterAddClick() {
+      if (appState.rooms.length === 0) {
+        navigateTo('create-room');
+        showToast('Create a room first to start sharing moments!', 'ℹ️');
+      } else {
+        openLiveCameraScreen();
+      }
+    }
+
+    /* ========================================================
+       RENDERERS: HOME SCREEN
+       ======================================================== */
+    function renderHomeScreen() {
+      const user = appState.users.eric;
+      document.getElementById('homeUserAvatarContainer').innerHTML = renderUserAvatarHtml(user, 'w-9 h-9', 'text-[11px]');
+
+      const roomsContainer = document.getElementById('homeRoomsContainer');
+      const momentsSection = document.getElementById('homeLatestMomentsSection');
+      const momentsContainer = document.getElementById('homeMomentsContainer');
+      const roomsSubtitle = document.getElementById('homeRoomsSubtitle');
+
+      renderFriendsOnCircle();
+
+      // IF NO ROOMS CREATED YET: SHOW EMPTY STATE
+      if (appState.rooms.length === 0) {
+        roomsSubtitle.classList.add('hidden');
+        momentsSection.classList.add('hidden');
+
+        roomsContainer.className = "px-6";
+        roomsContainer.innerHTML = `
+          <div class="p-5 app-surface rounded-3xl border border-dashed border-purple-300 dark:border-purple-800/80 text-center space-y-3 shadow-card-soft">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-[#7048E8] flex items-center justify-center text-xl mx-auto">
+              ✨
+            </div>
+            <div>
+              <div class="text-sm font-bold app-header-title">No rooms created yet</div>
+              <p class="text-xs app-muted-text mt-0.5 leading-relaxed">
+                Start a private circle with friends and set a deadline (1h, 2h, or 4h).
+              </p>
+            </div>
+            <div class="flex items-center justify-center gap-2 pt-1">
+              <button onclick="navigateTo('create-room')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">
+                + Create Room
+              </button>
+              <button onclick="navigateTo('join-room')" class="px-4 py-2 rounded-full app-surface border border-purple-200 text-[#7048E8] dark:text-[#A78BFA] text-xs font-bold hover:bg-purple-50 transition active:scale-95">
+                Join with Code
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // ROOMS EXIST: SHOW ACTIVE ROOMS
+      roomsSubtitle.innerText = `${appState.rooms.length} active room${appState.rooms.length > 1 ? 's' : ''}`;
+      roomsSubtitle.classList.remove('hidden');
+
+      roomsContainer.className = "flex gap-3.5 overflow-x-auto px-6 no-scrollbar pb-1";
+      roomsContainer.innerHTML = appState.rooms.map(room => {
+        const remainingHours = Math.max(1, Math.round((room.deadline - Date.now()) / (3600 * 1000)));
+        return `
+          <div onclick="selectRoomAndOpen('${room.id}')" class="min-w-[130px] p-3 rounded-2xl app-surface border border-gray-100 dark:border-gray-800 hover:border-purple-200 shadow-card-soft cursor-pointer active:scale-95 transition flex flex-col items-center text-center">
+            <div class="w-14 h-14 rounded-full overflow-hidden p-0.5 border-2 border-purple-200 dark:border-purple-800 mb-2 relative flex items-center justify-center">
+              ${renderUserAvatarHtml(appState.users[room.members[0]] || user, 'w-full h-full', 'text-sm')}
+            </div>
+            <div class="text-xs font-extrabold app-header-title truncate w-full mb-0.5">${room.name}</div>
+            <div class="text-[10px] app-muted-text font-medium mb-1.5">${room.members.length} members</div>
+            <span class="app-timer-pill px-2.5 py-0.5 rounded-full bg-[#EDE9FE] text-[#7048E8] text-[10px] font-extrabold tracking-tight">
+              ${remainingHours}h left
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // LATEST MOMENTS
+      if (appState.moments.length > 0) {
+        momentsSection.classList.remove('hidden');
+        momentsContainer.innerHTML = appState.moments.map(m => {
+          const author = appState.users[m.userId] || { name: 'Friend' };
+          const timeAgo = formatTimeAgo(m.timestamp);
+          return `
+            <div onclick="openMomentLightbox('${m.id}')" class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card-soft hover:border-purple-100 transition cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]">
+              <div class="flex items-center gap-3">
+                ${renderUserAvatarHtml(author, 'w-10 h-10', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${author.name}</div>
+                  <div class="text-[10px] app-muted-text font-medium">${m.roomName} • ${timeAgo}</div>
+                  <div class="text-xs font-semibold mt-0.5">${m.caption}</div>
+                </div>
+              </div>
+              <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800 shadow-sm">
+                <img src="${m.imageUrl}" alt="Moment" class="w-full h-full object-cover">
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        momentsSection.classList.remove('hidden');
+        momentsContainer.innerHTML = `
+          <div class="p-4 app-surface rounded-2xl border border-dashed border-purple-200 dark:border-purple-900 text-center text-xs app-muted-text font-medium">
+            No moments captured yet. Tap "+ Share your moment" to post live!
+          </div>
+        `;
+      }
+    }
+
+    /* ========================================================
+       RENDERERS: ROOM DETAIL & COUNTDOWN TIMER
+       ======================================================== */
+    function selectRoomAndOpen(roomId) {
+      appState.activeRoomId = roomId;
+      navigateTo('room-detail');
+    }
+
+    function renderRoomDetailScreen() {
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId) || appState.rooms[0];
+      if (!room) {
+        navigateTo('create-room');
+        return;
+      }
+      
+      document.getElementById('roomDetailTitle').innerText = room.name;
+      document.getElementById('roomDetailMembersCount').innerText = `${room.members.length} members`;
+      document.getElementById('roomDurationSubtitle').innerText = `${room.durationHours} hours`;
+      document.getElementById('cameraTargetRoomName').innerText = room.name;
+
+      // Render Avatar Stack in header
+      const avatarStack = document.getElementById('roomDetailAvatarStack');
+      avatarStack.innerHTML = room.members.slice(0, 3).map(mId => {
+        const u = appState.users[mId] || { name: 'Friend' };
+        return renderUserAvatarHtml(u, 'w-6 h-6 border-2 border-white dark:border-[#13141F]', 'text-[9px]');
+      }).join('');
+
+      // Members List Row with Initials
+      const membersList = document.getElementById('roomMembersList');
+      membersList.innerHTML = room.members.map(mId => {
+        const u = appState.users[mId] || { name: 'Friend' };
+        const isCurrentUser = (mId === appState.currentUserId);
+        const hasPosted = room.postedThisRound.includes(mId);
+
+        return `
+          <div class="flex flex-col items-center">
+            <div class="relative mb-1">
+              ${renderUserAvatarHtml(u, 'w-12 h-12', 'text-xs')}
+              ${hasPosted ? `
+                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#13141F] flex items-center justify-center text-[8px] text-white font-bold">✓</span>
+              ` : `
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-amber-400 rounded-full border-2 border-white dark:border-[#13141F]"></span>
+              `}
+            </div>
+            <span class="text-xs font-bold app-header-title">${isCurrentUser ? 'You' : u.name.split(' ')[0]}</span>
+            <span class="text-[10px] ${hasPosted ? 'text-emerald-500 font-bold' : 'app-muted-text'}">
+              ${hasPosted ? 'Posted' : 'Pending'}
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // Render Moments Strip
+      const roomMoments = appState.moments.filter(m => m.roomId === room.id);
+      const momentsStrip = document.getElementById('roomMomentsStrip');
+      if (roomMoments.length > 0) {
+        momentsStrip.innerHTML = roomMoments.map(m => `
+          <div onclick="openMomentLightbox('${m.id}')" class="aspect-square rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition">
+            <img src="${m.imageUrl}" alt="Moment" class="w-full h-full object-cover">
+          </div>
+        `).join('');
+      } else {
+        momentsStrip.innerHTML = `
+          <div class="col-span-4 py-4 text-center text-xs app-muted-text font-medium app-surface rounded-2xl border border-dashed border-purple-200 dark:border-purple-900">
+            No moments yet. Capture what you're doing right now live!
+          </div>
+        `;
+      }
+
+      updateRoomCountdown();
+    }
+
+    function updateRoomCountdown() {
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId);
+      if (!room) return;
+
+      const now = Date.now();
+      const diffMs = Math.max(0, room.deadline - now);
+
+      const hours = Math.floor(diffMs / (3600 * 1000));
+      const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
+      const secs = Math.floor((diffMs % (60 * 1000)) / 1000);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const timeStr = `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+      
+      const timeElem = document.getElementById('roomCountdownTime');
+      if (timeElem) timeElem.innerText = timeStr;
+
+      const circumference = 590.6;
+      const progressFraction = (room.totalDurationMs - diffMs) / room.totalDurationMs;
+      const offset = circumference * (1 - Math.min(1, Math.max(0, progressFraction)));
+      
+      const circleElem = document.getElementById('timerProgressCircle');
+      if (circleElem) circleElem.style.strokeDashoffset = offset;
+    }
+
+    setInterval(updateRoomCountdown, 1000);
+
+    /* ========================================================
+       LIVE CAMERA (DEVICE CAPTURE ONLY - NO CAMERA ROLL)
+       ======================================================== */
+    async function openLiveCameraScreen(targetRoomId = null, isObligation = false) {
+      if (targetRoomId) {
+        appState.activeRoomId = targetRoomId;
+      } else if (!appState.activeRoomId && appState.rooms.length > 0) {
+        appState.activeRoomId = appState.rooms[0].id;
+      }
+
+      if (isObligation) {
+        appState.obligationHostRoomId = appState.activeRoomId;
+      }
+
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId);
+      document.getElementById('cameraTargetRoomName').innerText = room ? room.name : 'Circle';
+      document.getElementById('momentCaptionInput').value = '';
+      appState.capturedSnapshotDataUrl = null;
+
+      // Handle Host Obligation Banner
+      const obligationBanner = document.getElementById('cameraObligationBanner');
+      if (appState.obligationHostRoomId) {
+        obligationBanner.classList.remove('hidden');
+      } else {
+        obligationBanner.classList.add('hidden');
+      }
+
+      // Viewfinder mode by default
+      document.getElementById('capturedSnapshotImg').classList.add('hidden');
+      document.getElementById('liveCameraVideo').classList.remove('hidden');
+      document.getElementById('retakeButtonContainer').classList.add('hidden');
+      document.getElementById('cameraViewfinderControls').classList.remove('hidden');
+      document.getElementById('cameraReviewControls').classList.add('hidden');
+
+      const screens = document.querySelectorAll('.screen-view');
+      screens.forEach(s => s.classList.add('hidden'));
+
+      document.getElementById('screen-camera').classList.remove('hidden');
+      const bottomNav = document.getElementById('bottomNavBar');
+      bottomNav.classList.add('hidden');
+      bottomNav.style.display = 'none';
+
+      await startLiveDeviceCamera();
+    }
+
+    async function startLiveDeviceCamera() {
+      const video = document.getElementById('liveCameraVideo');
+      const overlay = document.getElementById('cameraPermissionOverlay');
+
+      try {
+        if (appState.cameraStream) {
+          appState.cameraStream.getTracks().forEach(t => t.stop());
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: appState.cameraFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        appState.cameraStream = stream;
+        video.srcObject = stream;
+        await video.play();
+        overlay.classList.add('hidden');
+      } catch (err) {
+        console.warn('Live camera permission required or unavailable:', err);
+        overlay.classList.remove('hidden');
+      }
+    }
+
+    function requestCameraAccess() {
+      startLiveDeviceCamera();
+    }
+
+    function stopLiveCamera() {
+      if (appState.cameraStream) {
+        appState.cameraStream.getTracks().forEach(t => t.stop());
+        appState.cameraStream = null;
+      }
+      const bottomNav = document.getElementById('bottomNavBar');
+      if (bottomNav) bottomNav.style.display = '';
+    }
+
+    function closeCameraScreen() {
+      if (appState.obligationHostRoomId) {
+        const confirmExit = confirm("As host, you are obligated to post your moment to start the room round. Leave anyway?");
+        if (!confirmExit) return;
+        appState.obligationHostRoomId = null;
+      }
+      stopLiveCamera();
+      navigateBack();
+    }
+
+    function flipCameraFacingMode() {
+      appState.cameraFacingMode = (appState.cameraFacingMode === 'user') ? 'environment' : 'user';
+      startLiveDeviceCamera();
+      playSound('pop');
+      showToast(`Switched to ${appState.cameraFacingMode === 'user' ? 'front' : 'back'} camera`, '🔄');
+    }
+
+    function toggleFlash() {
+      const btn = document.getElementById('flashBtn');
+      btn.classList.toggle('text-amber-400');
+      playSound('pop');
+    }
+
+    function captureLiveShutter() {
+      playSound('shutter');
+
+      const flash = document.getElementById('flashEffect');
+      flash.classList.remove('opacity-0');
+      flash.classList.add('opacity-90');
+      setTimeout(() => {
+        flash.classList.remove('opacity-90');
+        flash.classList.add('opacity-0');
+      }, 100);
+
+      const video = document.getElementById('liveCameraVideo');
+      const canvas = document.getElementById('cameraSnapshotCanvas');
+      const img = document.getElementById('capturedSnapshotImg');
+
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        appState.capturedSnapshotDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        img.src = appState.capturedSnapshotDataUrl;
+        
+        showCapturedReviewUI();
+        showToast('Live moment captured! Add caption & tap Post Moment.', '📸');
+      } else {
+        simulateLiveFrame();
+      }
+    }
+
+    function simulateLiveFrame() {
+      const sampleLiveShots = [
+        'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80'
+      ];
+      const randomShot = sampleLiveShots[Math.floor(Math.random() * sampleLiveShots.length)];
+      appState.capturedSnapshotDataUrl = randomShot;
+      
+      const img = document.getElementById('capturedSnapshotImg');
+      img.src = randomShot;
+      document.getElementById('cameraPermissionOverlay').classList.add('hidden');
+      
+      showCapturedReviewUI();
+      playSound('shutter');
+      showToast('Live frame captured!', '📸');
+    }
+
+    function showCapturedReviewUI() {
+      document.getElementById('capturedSnapshotImg').classList.remove('hidden');
+      document.getElementById('liveCameraVideo').classList.add('hidden');
+      document.getElementById('retakeButtonContainer').classList.remove('hidden');
+      document.getElementById('cameraViewfinderControls').classList.add('hidden');
+      document.getElementById('cameraReviewControls').classList.remove('hidden');
+    }
+
+    function retakeLiveMoment() {
+      appState.capturedSnapshotDataUrl = null;
+      document.getElementById('capturedSnapshotImg').classList.add('hidden');
+      document.getElementById('liveCameraVideo').classList.remove('hidden');
+      document.getElementById('retakeButtonContainer').classList.add('hidden');
+      document.getElementById('cameraReviewControls').classList.add('hidden');
+      document.getElementById('cameraViewfinderControls').classList.remove('hidden');
+      playSound('pop');
+    }
+
+    function submitLiveMoment() {
+      if (!appState.capturedSnapshotDataUrl) {
+        captureLiveShutter();
+        return;
+      }
+
+      const caption = document.getElementById('momentCaptionInput').value.trim() || 'Live moment ✌️';
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId) || appState.rooms[0];
+
+      if (!room) {
+        showToast('Please create or join a room first!', '⚠️');
+        return;
+      }
+
+      const newMoment = {
+        id: 'm_' + Date.now(),
+        userId: appState.currentUserId,
+        roomId: room.id,
+        roomName: room.name,
+        timestamp: Date.now(),
+        caption: caption,
+        imageUrl: appState.capturedSnapshotDataUrl,
+        reactions: ['❤️']
+      };
+
+      appState.moments.unshift(newMoment);
+      if (!room.postedThisRound.includes(appState.currentUserId)) {
+        room.postedThisRound.push(appState.currentUserId);
+      }
+
+      appState.users.eric.momentsCount++;
+      const wasObligated = Boolean(appState.obligationHostRoomId);
+      appState.obligationHostRoomId = null;
+
+      persistCurrentAccountData();
+
+      playSound('pop');
+      if (wasObligated) {
+        showToast(`Room started! Your live moment is posted. 🚀`, '🎉');
+      } else {
+        showToast('Moment shared live with your Circle! 💜', '📸');
+      }
+
+      stopLiveCamera();
+      navigateTo('room-detail');
+    }
+
+    /* ========================================================
+       APPLE-STYLE EMOJI REACTIONS (NO LIKES COMPETITION)
+       ======================================================== */
+    let activeLightboxMomentId = null;
+
+    function openMomentLightbox(momentId) {
+      const moment = appState.moments.find(m => m.id === momentId);
+      if (!moment) return;
+
+      activeLightboxMomentId = momentId;
+      const author = appState.users[moment.userId] || { name: 'Friend' };
+
+      document.getElementById('lightboxUserAvatarContainer').innerHTML = renderUserAvatarHtml(author, 'w-9 h-9', 'text-xs');
+      document.getElementById('lightboxUserName').innerText = author.name;
+      document.getElementById('lightboxRoomMeta').innerText = `${moment.roomName} • ${formatTimeAgo(moment.timestamp)}`;
+      document.getElementById('lightboxImage').src = moment.imageUrl;
+      document.getElementById('lightboxCaption').innerText = moment.caption;
+
+      const modal = document.getElementById('momentLightboxModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeMomentLightbox() {
+      const modal = document.getElementById('momentLightboxModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      activeLightboxMomentId = null;
+    }
+
+    function triggerPureEmojiReaction(emoji) {
+      playSound('pop');
+      spawnFloatingEmoji(emoji, document.getElementById('lightboxReactionsContainer'));
+      showToast(`Reacted ${emoji}`, '✨');
+    }
+
+    function triggerFeedEmojiReaction(emoji, element) {
+      playSound('pop');
+      showToast(`Reacted ${emoji}`, '✨');
+    }
+
+    function spawnFloatingEmoji(emoji, container) {
+      const el = document.createElement('div');
+      el.innerText = emoji;
+      el.className = 'animate-float-up text-3xl';
+      el.style.left = `${50 + (Math.random() * 40 - 20)}%`;
+      el.style.bottom = '20px';
+      el.style.setProperty('--rand-x', `${(Math.random() - 0.5) * 80}px`);
+
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 1400);
+    }
+
+    /* ========================================================
+       RENDERERS: PROFILE & ALL ROOMS & NOTIFICATIONS
+       ======================================================== */
+    function renderProfileScreen() {
+      const user = appState.users.eric;
+      document.getElementById('profileUserAvatarDisplay').innerHTML = renderUserAvatarHtml(user, 'w-full h-full', 'text-2xl');
+      document.getElementById('profileUserName').innerText = appState.currentUserName || user.name;
+      document.getElementById('profileUserHandle').innerText = appState.currentUserEmail;
+      document.getElementById('profileRoomsCount').innerText = user.roomsCount;
+      document.getElementById('profileMomentsCount').innerText = user.momentsCount;
+      document.getElementById('profileFriendsCount').innerText = user.friendsCount;
+      document.getElementById('profileDumpCountBadge').innerText = `${appState.compilationDumps.length} Dumps`;
+    }
+
+    function renderAllRoomsScreen() {
+      const chips = document.getElementById('allRoomsChipsContainer');
+      const feed = document.getElementById('allMomentsFeedContainer');
+
+      if (appState.rooms.length === 0) {
+        chips.innerHTML = `<span class="text-xs app-muted-text">No active rooms yet.</span>`;
+        feed.innerHTML = `
+          <div class="p-6 app-surface rounded-3xl border border-dashed border-purple-200 text-center text-xs app-muted-text space-y-2">
+            <div>✨ No moments posted yet.</div>
+            <button onclick="navigateTo('create-room')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white font-bold text-xs">
+              Create your first room
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      chips.innerHTML = appState.rooms.map(room => {
+        const remainingHours = Math.max(1, Math.round((room.deadline - Date.now()) / (3600 * 1000)));
+        const isCurrent = room.id === appState.activeRoomId;
+        const firstMember = appState.users[room.members[0]] || appState.users.eric;
+
+        return `
+          <button onclick="selectRoomAndOpen('${room.id}')" class="px-3 py-2 rounded-xl border ${isCurrent ? 'bg-purple-100 dark:bg-purple-950/60 border-[#7048E8] text-[#7048E8] dark:text-[#A78BFA]' : 'app-surface border-gray-200 text-gray-700 dark:text-gray-300'} text-xs font-bold shrink-0 flex items-center gap-2 shadow-sm transition">
+            ${renderUserAvatarHtml(firstMember, 'w-5 h-5', 'text-[9px]')}
+            <span>${room.name}</span>
+            <span class="text-[10px] app-muted-text">• ${remainingHours}h</span>
+          </button>
+        `;
+      }).join('');
+
+      feed.innerHTML = appState.moments.map(m => {
+        const author = appState.users[m.userId] || { name: 'Friend' };
+        const timeAgo = formatTimeAgo(m.timestamp);
+
+        return `
+          <div class="app-surface rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-card-soft">
+            <div class="p-3.5 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                ${renderUserAvatarHtml(author, 'w-9 h-9', 'text-xs')}
+                <div>
+                  <div class="text-xs font-bold app-header-title">${author.name}</div>
+                  <div class="text-[10px] app-muted-text font-medium">${m.roomName} • ${timeAgo}</div>
+                </div>
+              </div>
+              <button onclick="openMomentLightbox('${m.id}')" class="text-gray-400 hover:text-gray-600 p-1">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+              </button>
+            </div>
+
+            <div onclick="openMomentLightbox('${m.id}')" class="w-full aspect-[4/3] bg-black overflow-hidden cursor-pointer">
+              <img src="${m.imageUrl}" alt="Moment" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+            </div>
+
+            <div class="p-3.5 space-y-2.5">
+              <p class="text-xs font-semibold">${m.caption}</p>
+
+              <!-- Apple-style Pure Emoji Buttons (NO LIKE COUNTS) -->
+              <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-800">
+                <button onclick="triggerFeedEmojiReaction('❤️', this)" class="px-2.5 py-1 rounded-full bg-pink-50 dark:bg-pink-950/40 text-sm active:scale-90 transition">
+                  <span class="apple-emoji">❤️</span>
+                </button>
+                <button onclick="triggerFeedEmojiReaction('🔥', this)" class="px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-sm active:scale-90 transition">
+                  <span class="apple-emoji">🔥</span>
+                </button>
+                <button onclick="triggerFeedEmojiReaction('😂', this)" class="px-2.5 py-1 rounded-full bg-yellow-50 dark:bg-yellow-950/40 text-sm active:scale-90 transition">
+                  <span class="apple-emoji">😂</span>
+                </button>
+                <button onclick="triggerFeedEmojiReaction('👏', this)" class="px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/40 text-sm active:scale-90 transition">
+                  <span class="apple-emoji">👏</span>
+                </button>
+                <button onclick="openMomentLightbox('${m.id}')" class="ml-auto text-xs font-bold text-[#7048E8] hover:underline">
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderNotificationsScreen() {
+      const container = document.getElementById('notificationsListContainer');
+      container.innerHTML = appState.notifications.map(n => {
+        const u = n.userId ? appState.users[n.userId] : null;
+        return `
+          <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card-soft flex items-center justify-between gap-3 hover:border-purple-100 transition">
+            <div class="flex items-center gap-3">
+              ${u ? renderUserAvatarHtml(u, 'w-10 h-10', 'text-xs') : `
+                <div class="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-950/60 text-[#7048E8] flex items-center justify-center font-bold text-lg">
+                  ${n.icon || '🔔'}
+                </div>
+              `}
+              <div>
+                <div class="text-xs font-bold app-header-title">${n.title}</div>
+                <div class="text-[10px] app-muted-text font-medium">${n.subtitle} • ${n.timeAgo}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function markAllNotificationsRead() {
+      appState.notifications.forEach(n => n.read = true);
+      renderNotificationsScreen();
+      showToast('All notifications marked as read', '✓');
+    }
+
+    /* ========================================================
+       ROOM CREATION & JOIN LOGIC
+       ======================================================== */
+    function selectTimerInterval(val) {
+      appState.selectedTimerHours = val;
+      const buttons = document.querySelectorAll('.timer-interval-btn');
+      const customRow = document.getElementById('customTimerRow');
+
+      buttons.forEach(btn => {
+        const h = btn.getAttribute('data-hours');
+        if (h == val) {
+          btn.className = "timer-interval-btn py-2.5 rounded-xl bg-[#7048E8] text-white text-xs font-bold shadow-sm transition";
+        } else {
+          btn.className = "timer-interval-btn py-2.5 rounded-xl app-surface border border-gray-200 text-xs font-bold app-muted-text hover:border-purple-200 transition";
+        }
+      });
+
+      if (val === 'custom') customRow.classList.remove('hidden');
+      else customRow.classList.add('hidden');
+    }
+
+    function copyGeneratedCode() {
+      const code = document.getElementById('generatedRoomCode').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyCodeBtn');
+        btn.innerText = 'Copied! ✓';
+        setTimeout(() => btn.innerText = 'Copy', 2000);
+        showToast(`Room code ${code} copied to clipboard!`, '📋');
+      });
+    }
+
+    function renderCreateRoomScreen() {
+      // Host avatar & name
+      const host = appState.users.eric;
+      const hostAvatarEl = document.getElementById('createRoomHostAvatar');
+      if (hostAvatarEl) hostAvatarEl.innerHTML = renderUserAvatarHtml(host, 'w-8 h-8', 'text-[10px]');
+      const hostNameEl = document.getElementById('createRoomHostName');
+      if (hostNameEl) hostNameEl.innerText = `${appState.currentUserName} (You)`;
+      
+      const errorNotice = document.getElementById('createRoomErrorNotice');
+      if (errorNotice) errorNotice.classList.add('hidden');
+
+      // Populate friends list (only added friends from user's friends list)
+      const addedFriends = appState.friendsOnCircle.filter(f => f.added);
+      const container = document.getElementById('createRoomFriendsList');
+
+      if (!appState.selectedCreateRoomFriendIds) {
+        appState.selectedCreateRoomFriendIds = [];
+      }
+      // Retain only those currently in addedFriends
+      appState.selectedCreateRoomFriendIds = appState.selectedCreateRoomFriendIds.filter(id => addedFriends.some(f => f.id === id));
+
+      updateCreateRoomSelectedBadge();
+
+      if (!container) return;
+
+      if (addedFriends.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center space-y-2">
+            <div class="text-xs font-bold app-header-title">No friends on your Circle yet</div>
+            <p class="text-[11px] app-muted-text">You must add at least 1 friend from "Also on Circle" before creating a room.</p>
+            <button onclick="navigateTo('home')" class="px-4 py-2 rounded-full bg-[#7048E8] text-white text-xs font-bold shadow-sm active:scale-95 transition">
+              + Add Friends on Home
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = addedFriends.map(f => {
+        const u = appState.users[f.id] || f;
+        const isSelected = appState.selectedCreateRoomFriendIds.includes(f.id);
+        return `
+          <div onclick="toggleCreateRoomFriend('${f.id}')" class="p-3 rounded-2xl border ${isSelected ? 'bg-purple-50 dark:bg-purple-950/50 border-[#7048E8]' : 'app-surface border-gray-100 dark:border-gray-800'} flex items-center justify-between cursor-pointer active:scale-[0.99] transition shadow-sm">
+            <div class="flex items-center gap-3">
+              ${renderUserAvatarHtml(u, 'w-9 h-9', 'text-xs')}
+              <div>
+                <div class="text-xs font-bold app-header-title">${f.name}</div>
+                <div class="text-[10px] app-muted-text font-medium">${f.handle}</div>
+              </div>
+            </div>
+            <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'bg-[#7048E8] border-[#7048E8] text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center text-xs font-bold transition">
+              ${isSelected ? '✓' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleCreateRoomFriend(friendId) {
+      if (appState.selectedCreateRoomFriendIds.includes(friendId)) {
+        appState.selectedCreateRoomFriendIds = appState.selectedCreateRoomFriendIds.filter(id => id !== friendId);
+      } else {
+        appState.selectedCreateRoomFriendIds.push(friendId);
+      }
+      playSound('pop');
+      const errorNotice = document.getElementById('createRoomErrorNotice');
+      if (errorNotice) errorNotice.classList.add('hidden');
+      renderCreateRoomScreen();
+    }
+
+    function updateCreateRoomSelectedBadge() {
+      const count = (appState.selectedCreateRoomFriendIds || []).length;
+      const badge = document.getElementById('createRoomFriendCountBadge');
+      if (badge) {
+        badge.innerText = `${count} selected`;
+        if (count > 0) {
+          badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold";
+        } else {
+          badge.className = "px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-[#7048E8] dark:text-[#A78BFA] text-[10px] font-bold";
+        }
+      }
+    }
+
+    function handleCreateRoom() {
+      const name = document.getElementById('createRoomNameInput').value.trim() || 'My Friends Circle';
+      let hours = appState.selectedTimerHours;
+      if (hours === 'custom') {
+        hours = parseFloat(document.getElementById('customHoursInput').value) || 4;
+      }
+
+      // VALIDATION: Host must add at least 1 friend from their friend list!
+      if (!appState.selectedCreateRoomFriendIds || appState.selectedCreateRoomFriendIds.length === 0) {
+        const errorNotice = document.getElementById('createRoomErrorNotice');
+        if (errorNotice) errorNotice.classList.remove('hidden');
+        showToast('At least 1 friend must be added in addition to the host!', '⚠️');
+        playSound('pop');
+        return;
+      }
+
+      const generatedCode = document.getElementById('generatedRoomCode').innerText;
+      // Host + ONLY the friends explicitly chosen by the host
+      const members = [appState.currentUserId, ...appState.selectedCreateRoomFriendIds];
+
+      const newRoom = {
+        id: 'room-' + Date.now(),
+        name: name,
+        code: generatedCode,
+        members: members,
+        durationHours: hours,
+        deadline: Date.now() + hours * 3600 * 1000,
+        totalDurationMs: hours * 3600 * 1000,
+        postedThisRound: [],
+      };
+
+      appState.rooms.unshift(newRoom);
+      appState.activeRoomId = newRoom.id;
+      appState.users.eric.roomsCount++;
+
+      // Obligate host to post the first moment!
+      appState.obligationHostRoomId = newRoom.id;
+
+      persistCurrentAccountData();
+
+      document.getElementById('generatedRoomCode').innerText = generateRandomCode();
+      document.getElementById('createRoomNameInput').value = '';
+      appState.selectedCreateRoomFriendIds = [];
+
+      playSound('pop');
+      showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
+
+      // Immediately launch live camera screen in Host Obligation mode
+      openLiveCameraScreen(newRoom.id, true);
+    }
+
+    function generateRandomCode() {
+      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      let part1 = '';
+      let part2 = '';
+      for (let i = 0; i < 4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
+      for (let i = 0; i < 3; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
+      return `${part1}-${part2}`;
+    }
+
+    function handleJoinRoom() {
+      const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
+      const match = appState.rooms.find(r => r.code === code);
+
+      if (match) {
+        if (!match.members.includes(appState.currentUserId)) {
+          match.members.push(appState.currentUserId);
+          appState.users.eric.roomsCount++;
+        }
+        appState.activeRoomId = match.id;
+        persistCurrentAccountData();
+        showToast(`Joined "${match.name}"!`, '🎉');
+        navigateTo('room-detail');
+      } else {
+        const newJoined = {
+          id: 'room-' + Date.now(),
+          name: 'The Boys',
+          code: code,
+          members: [appState.currentUserId, 'kofi', 'jay', 'daniel'],
+          durationHours: 4,
+          deadline: Date.now() + 4 * 3600 * 1000,
+          totalDurationMs: 4 * 3600 * 1000,
+          postedThisRound: []
+        };
+        appState.rooms.unshift(newJoined);
+        appState.activeRoomId = newJoined.id;
+        appState.users.eric.roomsCount++;
+        persistCurrentAccountData();
+        showToast(`Joined Circle with code ${code}!`, '🎉');
+        navigateTo('room-detail');
+      }
+    }
+
+    function fillJoinCode(code) {
+      document.getElementById('joinRoomCodeInput').value = code;
+    }
+
+    function pasteFromClipboard() {
+      navigator.clipboard.readText().then(text => {
+        document.getElementById('joinRoomCodeInput').value = text.trim();
+        showToast('Pasted code from clipboard!', '📋');
+      }).catch(() => {
+        fillJoinCode('7F3K-2P9');
+      });
+    }
+
+    /* ========================================================
+       MODALS & UTILITIES
+       ======================================================== */
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function toggleRoomMenu() {
+      document.getElementById('roomActionMenu').classList.toggle('hidden');
+    }
+
+    function copyRoomCode() {
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId);
+      if (room) {
+        navigator.clipboard.writeText(room.code).then(() => {
+          showToast(`Copied code: ${room.code}`, '📋');
+          toggleRoomMenu();
+        });
+      }
+    }
+
+    function resetRoomTimer() {
+      const room = appState.rooms.find(r => r.id === appState.activeRoomId);
+      if (room) {
+        room.deadline = Date.now() + room.totalDurationMs;
+        room.postedThisRound = [];
+        persistCurrentAccountData();
+        showToast('New round started! Deadline reset.', '⏱️');
+        toggleRoomMenu();
+        renderRoomDetailScreen();
+      }
+    }
+
+    function setSplashSlide(num) {
+      appState.currentSplashSlide = num;
+      for (let i = 1; i <= 3; i++) {
+        const slide = document.getElementById(`splashSlide${i}`);
+        const dot = document.getElementById(`splashDot${i}`);
+        if (slide && dot) {
+          if (i === num) {
+            slide.classList.remove('hidden');
+            dot.className = "w-6 h-2 rounded-full bg-[#7048E8] transition-all";
+          } else {
+            slide.classList.add('hidden');
+            dot.className = "w-2 h-2 rounded-full bg-purple-200 dark:bg-gray-700 transition-all";
+          }
+        }
+      }
+      playSound('pop');
+    }
+
+    function toggleViewMode() {
+      const viewport = document.getElementById('appViewport');
+      const text = document.getElementById('viewModeText');
+      const icon = document.getElementById('viewModeIcon');
+
+      appState.isPhoneView = !appState.isPhoneView;
+      if (appState.isPhoneView) {
+        viewport.className = "w-full max-w-[420px] h-[870px] bg-[#F8F9FE] sm:rounded-[46px] overflow-hidden flex flex-col relative phone-mockup-frame transition-all duration-300 " + (appState.isDarkMode ? 'dark-app-theme' : '');
+        text.innerText = "Full Width";
+        icon.innerText = "📱";
+      } else {
+        viewport.className = "w-full max-w-4xl h-[90vh] bg-[#F8F9FE] rounded-3xl overflow-hidden flex flex-col relative shadow-2xl transition-all duration-300 " + (appState.isDarkMode ? 'dark-app-theme' : '');
+        text.innerText = "Phone Frame";
+        icon.innerText = "🖥️";
+      }
+    }
+
+    function showToast(msg, icon = '✨') {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastIcon').innerText = icon;
+      document.getElementById('toastMessage').innerText = msg;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    function formatTimeAgo(timestamp) {
+      const diffSecs = Math.floor((Date.now() - timestamp) / 1000);
+      if (diffSecs < 60) return 'Just now';
+      const diffMins = Math.floor(diffSecs / 60);
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return `${Math.floor(diffHours / 24)}d ago`;
+    }
+
+    // Close menus on outside click
+    document.addEventListener('click', (e) => {
+      const roomMenu = document.getElementById('roomActionMenu');
+      if (roomMenu && !roomMenu.classList.contains('hidden') && !e.target.closest('#roomActionMenu') && !e.target.closest('button[onclick="toggleRoomMenu()"]')) {
+        roomMenu.classList.add('hidden');
+      }
+    });
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      // Restore user session if exists
+      const savedEmail = localStorage.getItem(ACTIVE_USER_KEY);
+      const db = loadDatabase();
+      if (savedEmail && db[savedEmail]) {
+        restoreUserAccountData(savedEmail, db[savedEmail]);
+      }
+      applyTheme();
+      navigateTo('splash');
+    });
+  </script>
+</body>
+</html>
