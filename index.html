@@ -786,12 +786,17 @@
             </div>
           </div>
           
-          <button onclick="triggerProfilePhotoPicker()" class="text-[11px] font-bold text-[#7048E8] hover:underline mb-1">
-            Upload profile picture
-          </button>
+          <div class="flex items-center gap-2 mb-1.5">
+            <button onclick="triggerProfilePhotoPicker()" class="text-[11px] font-bold text-[#7048E8] hover:underline">
+              Change picture
+            </button>
+            <button id="profileRemovePhotoBtn" onclick="resetProfilePhotoToInitials()" class="text-[11px] font-bold text-gray-400 hover:text-red-500 hover:underline hidden">
+              • Remove
+            </button>
+          </div>
 
           <h2 id="profileUserName" class="text-xl font-extrabold app-header-title">Your Profile</h2>
-          <span id="profileUserHandle" class="text-xs font-medium app-muted-text">eric@example.com</span>
+          <span id="profileUserHandle" class="text-xs font-medium app-muted-text">@username</span>
         </div>
 
         <div class="px-6 mb-5">
@@ -2272,33 +2277,93 @@
       document.getElementById('profilePhotoFileInput').click();
     }
 
-    function handleProfilePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
+    function compressAvatarImage(file, targetSize = 256, quality = 0.85) {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read image'));
         reader.onload = function(e) {
-          const photoUrl = e.target.result;
-          const u = getCurrentUser(); if (u) { u.customAvatar = photoUrl; saveCurrentUser(u); }
-          localStorage.setItem('circle_user_avatar', photoUrl);
-          persistCurrentAccountData();
-          
-          renderProfileScreen();
-          renderHomeScreen();
-          
-          playSound('pop');
-          showToast('Profile picture uploaded successfully! 📸', '✓');
+          const img = new Image();
+          img.onerror = () => reject(new Error('Invalid image file'));
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              const minSide = Math.min(img.width, img.height);
+              const startX = (img.width - minSide) / 2;
+              const startY = (img.height - minSide) / 2;
+
+              canvas.width = targetSize;
+              canvas.height = targetSize;
+
+              const ctx = canvas.getContext('2d');
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, startX, startY, minSide, minSide, 0, 0, targetSize, targetSize);
+
+              const compressedUrl = canvas.toDataURL('image/jpeg', quality);
+              resolve(compressedUrl);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          img.src = e.target.result;
         };
         reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleProfilePhotoUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      try {
+        showToast('Updating profile picture...', '⏳');
+        const compressedPhotoUrl = await compressAvatarImage(file, 256, 0.85);
+
+        const u = getCurrentUser();
+        if (!u) {
+          showToast('Please sign in to update your profile photo', '⚠️');
+          return;
+        }
+
+        u.customAvatar = compressedPhotoUrl;
+        const db = loadDatabase();
+        db.users[u.id] = u;
+        saveDatabase(db);
+
+        // Update profile, home header, and any room avatars
+        renderProfileScreen();
+        renderHomeScreen();
+        if (appState.currentScreen === 'all-rooms') renderAllRoomsScreen();
+        if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+        if (appState.currentScreen === 'room-detail') renderRoomDetailScreen();
+
+        playSound('pop');
+        showToast('Profile picture updated successfully! 📸', '✓');
+      } catch (err) {
+        console.error('Profile photo error:', err);
+        showToast('Failed to update picture. Please choose another image.', '⚠️');
+      } finally {
+        event.target.value = '';
       }
     }
 
     function resetProfilePhotoToInitials() {
-      const u = getCurrentUser(); if (u) { u.customAvatar = null; saveCurrentUser(u); }
-      localStorage.removeItem('circle_user_avatar');
-      persistCurrentAccountData();
+      const u = getCurrentUser();
+      if (!u) return;
+
+      u.customAvatar = null;
+      const db = loadDatabase();
+      db.users[u.id] = u;
+      saveDatabase(db);
+
       renderProfileScreen();
       renderHomeScreen();
-      showToast('Profile photo reset to initials avatar.', 'ℹ️');
+      if (appState.currentScreen === 'all-rooms') renderAllRoomsScreen();
+      if (appState.currentScreen === 'create-room') renderCreateRoomScreen();
+      if (appState.currentScreen === 'room-detail') renderRoomDetailScreen();
+
+      playSound('pop');
+      showToast('Profile picture reset to initials avatar', 'ℹ️');
     }
 
     /* ========================================================
@@ -3538,6 +3603,15 @@
       const friendsBadge = document.getElementById('profileFriendsBadge');
       if (friendsBadge) friendsBadge.innerText = `${friendsCount} Friends`;
       document.getElementById('profileDumpCountBadge').innerText = `${appState.compilationDumps.length} Dumps`;
+
+      const removePhotoBtn = document.getElementById('profileRemovePhotoBtn');
+      if (removePhotoBtn) {
+        if (user.customAvatar) {
+          removePhotoBtn.classList.remove('hidden');
+        } else {
+          removePhotoBtn.classList.add('hidden');
+        }
+      }
     }
 
     function renderAllRoomsScreen() {
