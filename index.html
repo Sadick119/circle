@@ -187,14 +187,8 @@
       <!-- Account Status Badge -->
       <div id="topAccountBadge" class="flex items-center bg-white px-2.5 py-1.5 rounded-xl border border-gray-200 shadow-sm gap-1.5">
         <span class="text-gray-400 font-semibold text-[11px]">User:</span>
-        <span id="topAccountName" class="font-bold text-gray-800 text-xs">Eric Sadick</span>
+        <span id="topAccountName" class="font-bold text-gray-800 text-xs">Not signed in</span>
       </div>
-
-      <!-- Demo State Toggle -->
-      <button onclick="toggleDemoState()" id="demoStateBtn" class="flex items-center gap-1.5 bg-white hover:bg-purple-50 text-[#7048E8] font-bold px-3 py-1.5 rounded-xl border border-purple-200 shadow-sm transition active:scale-95">
-        <span id="demoStateIcon">✨</span>
-        <span id="demoStateText">Load Demo Circle</span>
-      </button>
 
       <!-- View Mode Toggle -->
       <button id="viewModeToggle" onclick="toggleViewMode()" class="flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 font-bold px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm transition active:scale-95">
@@ -796,7 +790,7 @@
             Upload profile picture
           </button>
 
-          <h2 id="profileUserName" class="text-xl font-extrabold app-header-title">Eric Sadick</h2>
+          <h2 id="profileUserName" class="text-xl font-extrabold app-header-title">Your Profile</h2>
           <span id="profileUserHandle" class="text-xs font-medium app-muted-text">eric@example.com</span>
         </div>
 
@@ -966,7 +960,7 @@
         <!-- SIGN UP ONLY: Full Name -->
         <div id="authFieldFullName">
           <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-          <input id="authFullNameInput" type="text" placeholder="e.g. Eric Sadick" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          <input id="authFullNameInput" type="text" placeholder="e.g. John Doe" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
         </div>
 
         <!-- SIGN UP ONLY: Choose Username -->
@@ -974,7 +968,7 @@
           <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Choose Username (Your Circle Identity)</label>
           <div class="relative">
             <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#7048E8]">@</span>
-            <input id="authUsernameInput" type="text" placeholder="ericsadick" class="w-full pl-8 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+            <input id="authUsernameInput" type="text" placeholder="yourname" class="w-full pl-8 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
           </div>
           <span class="text-[10px] text-gray-400 mt-0.5 block">Friends can search and add you with this @username</span>
         </div>
@@ -989,13 +983,17 @@
         <!-- SIGN UP ONLY: Email Address -->
         <div id="authFieldEmail">
           <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-          <input id="authEmailInput" type="email" placeholder="you@actualdomain.com" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          <input id="authEmailInput" type="email" placeholder="you@email.com" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
         </div>
 
-        <!-- SIGN IN ONLY: Login Identifier -->
+        <!-- SIGN IN ONLY: Username -->
         <div id="authFieldLoginIdentifier" class="hidden">
-          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Username, Email, or Phone Number</label>
-          <input id="authLoginIdentifierInput" type="text" placeholder="@username, email, or phone" class="w-full px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">Username</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-2.5 text-xs font-bold text-[#7048E8]">@</span>
+            <input id="authLoginIdentifierInput" type="text" placeholder="username" autocomplete="username" class="w-full pl-8 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-[#1A1C2C] border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-[#7048E8] transition">
+          </div>
+          <span class="text-[10px] text-gray-400 mt-0.5 block">Enter your Circle @username</span>
         </div>
 
         <!-- SHARED: Password -->
@@ -1013,10 +1011,7 @@
         </button>
       </form>
 
-      <!-- Quick Demo Credentials Hint (For Testing) -->
-      <div id="authDemoHint" class="p-2.5 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-100 dark:border-purple-900/60 text-[11px] text-gray-600 dark:text-gray-300">
-        <span class="font-bold text-[#7048E8]">💡 Test Accounts:</span> Log in with <code class="font-bold">@ericsadick</code>, <code class="font-bold">@kofi_mensah</code>, or <code class="font-bold">@ama_k</code> (Password: <code class="font-bold">password123</code>).
-      </div>
+
 
       <!-- Footer switch link -->
       <div class="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs">
@@ -1376,16 +1371,7 @@
           </button>
         </div>
 
-        <div>
-          <span class="text-[11px] font-bold uppercase tracking-wider app-muted-text">Circle Demo Data</span>
-          <button onclick="toggleDemoState(); closeSettingsModal();" class="w-full mt-2 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs font-bold app-header-title hover:bg-purple-50 transition">
-            <div class="flex items-center gap-2.5">
-              <span id="settingsStateIcon">✨</span>
-              <span id="settingsStateLabel">Toggle Demo Circle</span>
-            </div>
-            <span class="text-[10px] text-[#7048E8] font-bold">Switch →</span>
-          </button>
-        </div>
+
       </div>
     </div>
   </div>
@@ -1456,130 +1442,36 @@
     /* ========================================================
        PERSISTENT USER REGISTRY & MULTI-ACCOUNT AUTH (V5)
        ======================================================== */
-    const DB_KEY = 'circle_users_registry_v5';
-    const ACTIVE_USER_ID_KEY = 'circle_active_userid_v5';
+    const DB_KEY = 'circle_app_accounts_v1';
+    const ACTIVE_USER_ID_KEY = 'circle_active_user_v1';
 
-    const DEFAULT_CONTACTS_BOOK = [
-      { name: 'Kofi Mensah', phone: '+15559876543' },
-      { name: 'Ama Boateng', phone: '+15554567890' },
-      { name: 'Jay Patel', phone: '+15556543210' },
-      { name: 'Daniel Brooks', phone: '+15553210987' },
-      { name: 'Sarah Jenkins', phone: '+15558889999' },
-      { name: 'Michael Scott', phone: '+15557776666' },
-      { name: 'Jessica Miller', phone: '+15553334444' }
-    ];
-
-    const DEFAULT_USERS_SEED = {
-      usr_eric: {
-        id: 'usr_eric',
-        username: 'ericsadick',
-        name: 'Eric Sadick',
-        phone: '+15551234567',
-        email: 'eric@example.com',
-        password: 'password123',
-        initials: 'ES',
-        color: 'bg-violet-600',
-        customAvatar: localStorage.getItem('circle_user_avatar') || null,
-        friends: ['usr_kofi', 'usr_ama'],
-        friendRequestsSent: [],
-        friendRequestsReceived: ['usr_jay'],
-        contacts: DEFAULT_CONTACTS_BOOK,
-        contactsPermissionGranted: false,
-        rooms: [],
-        moments: [],
-        compilationDumps: []
-      },
-      usr_kofi: {
-        id: 'usr_kofi',
-        username: 'kofi_mensah',
-        name: 'Kofi Mensah',
-        phone: '+15559876543',
-        email: 'kofi@example.com',
-        password: 'password123',
-        initials: 'KM',
-        color: 'bg-emerald-600',
-        customAvatar: null,
-        friends: ['usr_eric'],
-        friendRequestsSent: [],
-        friendRequestsReceived: [],
-        contacts: DEFAULT_CONTACTS_BOOK,
-        contactsPermissionGranted: true,
-        rooms: [],
-        moments: [],
-        compilationDumps: []
-      },
-      usr_ama: {
-        id: 'usr_ama',
-        username: 'ama_k',
-        name: 'Ama Boateng',
-        phone: '+15554567890',
-        email: 'ama@example.com',
-        password: 'password123',
-        initials: 'AB',
-        color: 'bg-pink-600',
-        customAvatar: null,
-        friends: ['usr_eric'],
-        friendRequestsSent: [],
-        friendRequestsReceived: [],
-        contacts: DEFAULT_CONTACTS_BOOK,
-        contactsPermissionGranted: true,
-        rooms: [],
-        moments: [],
-        compilationDumps: []
-      },
-      usr_jay: {
-        id: 'usr_jay',
-        username: 'jay_dev',
-        name: 'Jay Patel',
-        phone: '+15556543210',
-        email: 'jay@example.com',
-        password: 'password123',
-        initials: 'JP',
-        color: 'bg-blue-600',
-        customAvatar: null,
-        friends: [],
-        friendRequestsSent: ['usr_eric'],
-        friendRequestsReceived: [],
-        contacts: DEFAULT_CONTACTS_BOOK,
-        contactsPermissionGranted: false,
-        rooms: [],
-        moments: [],
-        compilationDumps: []
-      },
-      usr_daniel: {
-        id: 'usr_daniel',
-        username: 'daniel_b',
-        name: 'Daniel Brooks',
-        phone: '+15553210987',
-        email: 'daniel@example.com',
-        password: 'password123',
-        initials: 'DB',
-        color: 'bg-amber-600',
-        customAvatar: null,
-        friends: [],
-        friendRequestsSent: [],
-        friendRequestsReceived: [],
-        contacts: DEFAULT_CONTACTS_BOOK,
-        contactsPermissionGranted: false,
-        rooms: [],
-        moments: [],
-        compilationDumps: []
-      }
-    };
+    // Real App: No fake contacts, no placeholder seed accounts
+    const DEFAULT_CONTACTS_BOOK = [];
+    const DEFAULT_USERS_SEED = {};
 
     function loadDatabase() {
+      // Purge any legacy placeholder session keys once
+      try {
+        localStorage.removeItem('circle_users_registry_v5');
+        localStorage.removeItem('circle_active_userid_v5');
+        localStorage.removeItem('circle_users_registry_v4');
+      } catch (e) {}
+
       const stored = localStorage.getItem(DB_KEY);
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.users && Object.keys(parsed.users).length > 0) {
+          if (parsed && typeof parsed === 'object') {
+            parsed.users = parsed.users || {};
+            parsed.rooms = parsed.rooms || {};
+            parsed.moments = parsed.moments || [];
             return parsed;
           }
         } catch (e) {
           console.warn('DB parse error:', e);
         }
       }
-      const initialDb = { users: JSON.parse(JSON.stringify(DEFAULT_USERS_SEED)) };
+      const initialDb = { users: {}, rooms: {}, moments: [] };
       saveDatabase(initialDb);
       return initialDb;
     }
@@ -1599,16 +1491,15 @@
       if (currentId && db.users && db.users[currentId]) {
         return db.users[currentId];
       }
-      return db.users['usr_eric'] || Object.values(db.users)[0];
+      return null;
     }
 
     function getUserById(id) {
       const db = loadDatabase();
       if (!id) return null;
       if (db.users && db.users[id]) return db.users[id];
-      // fallback search by username
       const clean = id.toLowerCase().replace('@', '');
-      return Object.values(db.users).find(u => u.username.toLowerCase() === clean) || null;
+      return Object.values(db.users).find(u => u.username && u.username.toLowerCase() === clean) || null;
     }
 
     function saveCurrentUser(updatedFields) {
@@ -1622,11 +1513,11 @@
 
     const appState = {
       isDarkMode: localStorage.getItem('circle_dark_mode') === 'true',
-      currentUserId: localStorage.getItem(ACTIVE_USER_ID_KEY) || 'usr_eric',
-      currentUserName: 'Eric Sadick',
-      currentUserHandle: '@ericsadick',
-      currentUserEmail: 'eric@example.com',
-      currentUserPhone: '+15551234567',
+      currentUserId: localStorage.getItem(ACTIVE_USER_ID_KEY) || null,
+      currentUserName: '',
+      currentUserHandle: '',
+      currentUserEmail: '',
+      currentUserPhone: '',
       activeRoomId: null,
       currentScreen: 'splash',
       screenHistory: ['splash'],
@@ -1657,9 +1548,10 @@
         });
       },
 
-      // Dynamic getter for legacy friendsOnCircle
+      // Dynamic getter for friendsOnCircle
       get friendsOnCircle() {
         const user = getCurrentUser();
+        if (!user) return [];
         const db = loadDatabase();
         return Object.values(db.users)
           .filter(u => u.id !== user.id)
@@ -1676,18 +1568,7 @@
       rooms: [],
       moments: [],
       compilationDumps: [],
-
-      notifications: [
-        {
-          id: 'n_welcome',
-          type: 'invite',
-          userId: 'usr_ama',
-          title: 'Ama Boateng is on Circle',
-          subtitle: 'Add Ama to invite her to your rooms!',
-          timeAgo: 'Just now',
-          read: false
-        }
-      ]
+      notifications: []
     };
 
     /* ========================================================
@@ -1802,7 +1683,6 @@
       const fieldPhone = document.getElementById('authFieldPhone');
       const fieldEmail = document.getElementById('authFieldEmail');
       const fieldLoginIdentifier = document.getElementById('authFieldLoginIdentifier');
-      const demoHint = document.getElementById('authDemoHint');
 
       if (mode === 'signup') {
         if (tabSignup) tabSignup.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
@@ -1815,7 +1695,6 @@
         if (fieldPhone) fieldPhone.classList.remove('hidden');
         if (fieldEmail) fieldEmail.classList.remove('hidden');
         if (fieldLoginIdentifier) fieldLoginIdentifier.classList.add('hidden');
-        if (demoHint) demoHint.classList.add('hidden');
       } else {
         if (tabSignin) tabSignin.className = "py-2 rounded-xl transition bg-white dark:bg-[#1E1B38] text-[#7048E8] dark:text-[#A78BFA] shadow-sm";
         if (tabSignup) tabSignup.className = "py-2 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-800";
@@ -1827,7 +1706,6 @@
         if (fieldPhone) fieldPhone.classList.add('hidden');
         if (fieldEmail) fieldEmail.classList.add('hidden');
         if (fieldLoginIdentifier) fieldLoginIdentifier.classList.remove('hidden');
-        if (demoHint) demoHint.classList.remove('hidden');
       }
     }
 
@@ -1863,31 +1741,29 @@
       if (errorMsg) errorMsg.classList.add('hidden');
 
       if (appState.authMode === 'signin') {
-        const identifier = document.getElementById('authLoginIdentifierInput').value.trim();
-        if (!identifier || !password) {
-          showAuthError('Please enter your username, phone, or email, and password.');
+        const usernameInput = document.getElementById('authLoginIdentifierInput').value.trim();
+        if (!usernameInput) {
+          showAuthError('Please enter your username.');
+          return;
+        }
+        if (!password) {
+          showAuthError('Please enter your password.');
           return;
         }
 
-        const cleanId = identifier.toLowerCase().replace('@', '');
-        const cleanPhoneNum = cleanPhoneNumber(identifier);
+        const cleanUsername = usernameInput.toLowerCase().replace('@', '');
 
-        // Find user by username, email, or normalized phone
-        const matchedUser = Object.values(db.users).find(u => {
-          const matchUsername = u.username && u.username.toLowerCase() === cleanId;
-          const matchEmail = u.email && u.email.toLowerCase() === identifier.toLowerCase();
-          const matchPhone = u.phone && cleanPhoneNumber(u.phone) === cleanPhoneNum && cleanPhoneNum.length >= 7;
-          return matchUsername || matchEmail || matchPhone;
-        });
+        // Find user by exact username
+        const matchedUser = Object.values(db.users).find(u => u.username && u.username.toLowerCase() === cleanUsername);
 
         if (!matchedUser) {
-          showAuthError('No account found with this username, phone number, or email. Please sign up.');
+          showAuthError(`No account found with username @${cleanUsername}. Please check your username or create an account.`);
           return;
         }
 
         // STRICT PASSWORD VALIDATION
         if (matchedUser.password !== password) {
-          showAuthError('Incorrect password. Please verify your credentials and try again.');
+          showAuthError('Incorrect password. Please verify your password and try again.');
           return;
         }
 
@@ -1903,7 +1779,7 @@
         }
         navigateTo('home');
       } else {
-        // Sign Up
+        // Sign Up: Requires Full Name, Username, Phone, Email, Password
         const name = document.getElementById('authFullNameInput').value.trim();
         const rawUsername = document.getElementById('authUsernameInput').value.trim().toLowerCase().replace('@', '');
         const phone = document.getElementById('authPhoneInput').value.trim();
@@ -1931,8 +1807,13 @@
           return;
         }
 
-        if (!phone && !email) {
-          showAuthError('Please provide a phone number or email.');
+        if (!phone) {
+          showAuthError('Please provide your phone number so contacts can find you.');
+          return;
+        }
+
+        if (!email) {
+          showAuthError('Please provide your email address.');
           return;
         }
 
@@ -1941,7 +1822,16 @@
           return;
         }
 
-        // Create personalized account
+        // Generate vibrant user avatar color
+        const avatarColors = [
+          'bg-violet-600', 'bg-indigo-600', 'bg-purple-600',
+          'bg-fuchsia-600', 'bg-pink-600', 'bg-rose-600',
+          'bg-emerald-600', 'bg-teal-600', 'bg-cyan-600',
+          'bg-blue-600', 'bg-sky-600'
+        ];
+        const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+
+        // Create personalized real account
         const newUserId = 'usr_' + Date.now();
         const newUser = {
           id: newUserId,
@@ -1951,16 +1841,17 @@
           email: email,
           password: password,
           initials: getInitials(name),
-          color: 'bg-indigo-600',
+          color: randomColor,
           customAvatar: null,
           friends: [],
           friendRequestsSent: [],
           friendRequestsReceived: [],
-          contacts: DEFAULT_CONTACTS_BOOK,
+          contacts: [],
           contactsPermissionGranted: false,
           rooms: [],
           moments: [],
           compilationDumps: [],
+          notifications: [],
           createdAt: Date.now()
         };
 
@@ -1973,7 +1864,7 @@
 
         closeAuthModal();
         playSound('pop');
-        showToast(`Account created! Welcome, ${name}! 🎉`, '✨');
+        showToast(`Account created! Welcome to Circle, ${name}! 🎉`, '✨');
 
         // Automatically prompt for contacts access
         setTimeout(() => openContactsModal(), 400);
@@ -2041,23 +1932,25 @@
     function confirmEmailVerification() {
       const entered = document.getElementById('verificationCodeInput').value.trim();
       if (entered === appState.pendingVerificationCode || (entered.length === 6 && !isNaN(entered))) {
-        const { name, email, password } = appState.pendingAuthData || { name: 'Eric Sadick', email: 'eric@example.com', password: '123' };
+        if (!appState.pendingAuthData) { closeEmailVerifyModal(); return; }
+        const { name, email, password, phone, username } = appState.pendingAuthData;
         
         const db = loadDatabase();
         const newUserId = 'usr_' + Date.now();
         const newAccount = {
           id: newUserId,
-          username: email.split('@')[0],
-          name,
-          email,
-          phone: '',
-          password,
-          initials: getInitials(name),
+          username: username || (email ? email.split('@')[0] : 'user_' + Date.now().toString().slice(-4)),
+          name: name || 'Circle Member',
+          email: email || '',
+          phone: phone || '',
+          password: password,
+          initials: getInitials(name || 'Circle Member'),
+          color: 'bg-violet-600',
           customAvatar: null,
           friends: [],
           friendRequestsSent: [],
           friendRequestsReceived: [],
-          contacts: DEFAULT_CONTACTS_BOOK,
+          contacts: [],
           contactsPermissionGranted: false,
           rooms: [],
           moments: [],
@@ -2219,9 +2112,19 @@
       appState.currentUserEmail = user.email || '';
       appState.currentUserPhone = user.phone || '';
 
-      appState.rooms = user.rooms || [];
-      appState.moments = user.moments || [];
+      const db = loadDatabase();
+      // Load all rooms that this user belongs to
+      const allRooms = Object.values(db.rooms || {});
+      const userRooms = allRooms.filter(r => (r.members || []).includes(user.id));
+      appState.rooms = userRooms;
+
+      // Load moments belonging to this user or rooms they are in
+      const allMoments = db.moments || [];
+      const userMoments = allMoments.filter(m => m.userId === user.id || userRooms.some(r => r.id === m.roomId));
+      appState.moments = userMoments;
+
       appState.compilationDumps = user.compilationDumps || [];
+      appState.notifications = user.notifications || [];
       appState.activeRoomId = appState.rooms.length > 0 ? appState.rooms[0].id : null;
 
       const topName = document.getElementById('topAccountName');
@@ -2229,6 +2132,8 @@
       
       const homeAvatar = document.getElementById('homeUserAvatarContainer');
       if (homeAvatar) homeAvatar.innerHTML = renderUserAvatarHtml(user, 'w-8 h-8', 'text-xs');
+
+      updateNotificationsBadge();
     }
 
     function persistCurrentAccountData() {
@@ -2236,11 +2141,23 @@
       const user = getCurrentUser();
       if (user) {
         user.name = appState.currentUserName;
-        user.rooms = appState.rooms;
-        user.moments = appState.moments;
         user.compilationDumps = appState.compilationDumps;
+        user.notifications = appState.notifications;
         user.updatedAt = Date.now();
         db.users[user.id] = user;
+
+        // Persist rooms to central db.rooms
+        appState.rooms.forEach(r => {
+          db.rooms[r.id] = r;
+        });
+
+        // Persist moments to central db.moments
+        appState.moments.forEach(m => {
+          if (!db.moments.some(existing => existing.id === m.id)) {
+            db.moments.unshift(m);
+          }
+        });
+
         saveDatabase(db);
       }
     }
@@ -2267,34 +2184,9 @@
       // Collect moments in this room
       let momentsInRoom = appState.moments.filter(m => m.roomId === room.id);
       
-      // If none yet, provide sample moments for the compilation
       if (momentsInRoom.length === 0) {
-        momentsInRoom = [
-          {
-            id: 'dump_m1',
-            userId: 'eric',
-            authorName: appState.currentUserName,
-            caption: 'Working from the coffee shop ☕',
-            imageUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=600&q=80',
-            time: '12m ago'
-          },
-          {
-            id: 'dump_m2',
-            userId: 'kofi',
-            authorName: 'Kofi Mensah',
-            caption: 'Campus walk at sunset 🌅',
-            imageUrl: 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=600&q=80',
-            time: '24m ago'
-          },
-          {
-            id: 'dump_m3',
-            userId: 'ama',
-            authorName: 'Ama Boateng',
-            caption: 'Dinner break with pasta 🍝',
-            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
-            time: '45m ago'
-          }
-        ];
+        showToast('No moments captured in this room round yet!', 'ℹ️');
+        return;
       }
 
       const dump = {
@@ -2363,90 +2255,14 @@
     /* ========================================================
        DEMO POPULATION VS EMPTY STATE TOGGLE
        ======================================================== */
-    let isDemoMode = false;
-    function toggleDemoState() {
-      isDemoMode = !isDemoMode;
-      const btnIcon = document.getElementById('demoStateIcon');
-      const btnText = document.getElementById('demoStateText');
-      const settingsIcon = document.getElementById('settingsStateIcon');
-      const settingsLabel = document.getElementById('settingsStateLabel');
-
-      if (isDemoMode) {
-        appState.rooms = [
-          {
-            id: 'room-theboys',
-            name: 'The Boys',
-            code: '7F3K-2P9',
-            members: ['eric', 'kofi', 'jay', 'daniel'],
-            durationHours: 4,
-            deadline: Date.now() + (2 * 3600 + 16 * 60 + 37) * 1000,
-            totalDurationMs: 4 * 3600 * 1000,
-            thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80',
-            postedThisRound: ['eric', 'kofi'],
-          },
-          {
-            id: 'room-girlsonly',
-            name: 'Girls Only',
-            code: '9GL2-K5P',
-            members: ['ama', 'eric', 'jay'],
-            durationHours: 4,
-            deadline: Date.now() + (3 * 3600 + 5 * 60) * 1000,
-            totalDurationMs: 4 * 3600 * 1000,
-            thumbnail: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-            postedThisRound: ['ama'],
-          }
-        ];
-
-        appState.moments = [
-          {
-            id: 'm1',
-            userId: 'kofi',
-            roomId: 'room-theboys',
-            roomName: 'The Boys',
-            timestamp: Date.now() - 12 * 60 * 1000,
-            caption: 'Campus vibes ✌️',
-            imageUrl: 'https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=600&q=80'
-          },
-          {
-            id: 'm2',
-            userId: 'ama',
-            roomId: 'room-girlsonly',
-            roomName: 'Girls Only',
-            timestamp: Date.now() - 28 * 60 * 1000,
-            caption: 'Good food, good mood',
-            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80'
-          }
-        ];
-
-        appState.activeRoomId = 'room-theboys';
-        appState.users.eric.roomsCount = 2;
-        appState.users.eric.momentsCount = 8;
-
-        btnIcon.innerText = '🌱';
-        btnText.innerText = 'Reset to Blank State';
-        if (settingsIcon) settingsIcon.innerText = '🌱';
-        if (settingsLabel) settingsLabel.innerText = 'Reset to Blank State';
-
-        showToast('Loaded Demo Circle rooms & moments!', '✨');
-      } else {
-        appState.rooms = [];
-        appState.moments = [];
-        appState.activeRoomId = null;
-        appState.users.eric.roomsCount = 0;
-        appState.users.eric.momentsCount = 0;
-
-        btnIcon.innerText = '✨';
-        btnText.innerText = 'Load Demo Circle';
-        if (settingsIcon) settingsIcon.innerText = '✨';
-        if (settingsLabel) settingsLabel.innerText = 'Load Demo Circle';
-
-        showToast('App reset to clean fresh state.', '🌱');
+    function handleQuickSmsInvite() {
+      const input = document.getElementById('quickInvitePhoneInput');
+      const phone = input ? input.value.trim() : '';
+      if (!phone) {
+        showToast('Please enter a phone number', '⚠️');
+        return;
       }
-
-      persistCurrentAccountData();
-      renderHomeScreen();
-      if (appState.currentScreen === 'all-rooms') renderAllRoomsScreen();
-      if (appState.currentScreen === 'profile') renderProfileScreen();
+      inviteContactViaSms('Friend', phone);
     }
 
     /* ========================================================
@@ -2462,7 +2278,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
           const photoUrl = e.target.result;
-          appState.users.eric.customAvatar = photoUrl;
+          const u = getCurrentUser(); if (u) { u.customAvatar = photoUrl; saveCurrentUser(u); }
           localStorage.setItem('circle_user_avatar', photoUrl);
           persistCurrentAccountData();
           
@@ -2477,7 +2293,7 @@
     }
 
     function resetProfilePhotoToInitials() {
-      appState.users.eric.customAvatar = null;
+      const u = getCurrentUser(); if (u) { u.customAvatar = null; saveCurrentUser(u); }
       localStorage.removeItem('circle_user_avatar');
       persistCurrentAccountData();
       renderProfileScreen();
@@ -2518,9 +2334,9 @@
         }
       }
 
-      // If no native contacts returned (or on desktop / iOS Safari), use default contacts book
+      // Real App: only real imported contacts from device
       if (importedContacts.length === 0) {
-        importedContacts = DEFAULT_CONTACTS_BOOK;
+        // Native picker was empty or unsupported; keep real contacts list clean
       }
 
       // Merge into user's contacts
@@ -2587,25 +2403,30 @@
         }
       }
 
-      // Also include seed friends if contacts haven't matched yet
-      if (matchedFriends.length === 0) {
-        Object.values(db.users).forEach(u => {
-          if (u.id !== user.id && !(user.friends || []).includes(u.id)) {
-            matchedFriends.push({ contact: { name: u.name, phone: u.phone }, user: u });
-          }
-        });
-      }
-
       // Filter out people who are ALREADY friends
       const suggestions = matchedFriends.filter(item => !(user.friends || []).includes(item.user.id));
 
       if (suggestions.length === 0) {
-        container.innerHTML = `
-          <div class="p-3.5 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center text-xs app-muted-text space-y-1">
-            <span class="font-bold text-gray-700 dark:text-gray-300">All matched contacts are your friends!</span>
-            <p class="text-[10px]">Use the search bar above to find friends by @username, or invite more via SMS below.</p>
-          </div>
-        `;
+        if (!user.contactsPermissionGranted || contacts.length === 0) {
+          container.innerHTML = `
+            <div class="p-4 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center space-y-2">
+              <div class="text-xs font-bold app-header-title">Find friends from your contacts</div>
+              <p class="text-[11px] app-muted-text max-w-[240px] mx-auto leading-relaxed">
+                Sync contacts from your phone to automatically match friends who are already on Circle.
+              </p>
+              <button onclick="openContactsModal()" class="px-4 py-2 rounded-full bg-[#7048E8] hover:bg-[#5E35D6] text-white text-xs font-bold active:scale-95 transition shadow-sm">
+                Sync Phone Contacts 📇
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="p-3.5 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-dashed border-purple-200 dark:border-purple-800 text-center text-xs app-muted-text space-y-1">
+              <span class="font-bold text-gray-700 dark:text-gray-300">All matched contacts are your friends!</span>
+              <p class="text-[10px]">Search friends with their @username above, or invite more via SMS below.</p>
+            </div>
+          `;
+        }
       } else {
         container.innerHTML = suggestions.map(item => {
           const u = item.user;
@@ -2639,7 +2460,17 @@
       // Render SMS Invite list
       if (inviteContainer) {
         if (notOnCircle.length === 0) {
-          inviteContainer.innerHTML = `<span class="text-[11px] app-muted-text">All your contacts are registered on Circle!</span>`;
+          inviteContainer.innerHTML = `
+            <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 text-center text-xs app-muted-text space-y-2">
+              <p>Invite any friend to Circle via SMS link:</p>
+              <div class="flex gap-2">
+                <input id="quickInvitePhoneInput" type="tel" placeholder="Enter friend's phone number" class="flex-1 px-3 py-2 rounded-xl app-input border border-gray-200 text-xs font-semibold focus:outline-none focus:border-[#7048E8]">
+                <button onclick="handleQuickSmsInvite()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold active:scale-95 transition shadow-sm">
+                  Send SMS
+                </button>
+              </div>
+            </div>
+          `;
         } else {
           inviteContainer.innerHTML = notOnCircle.slice(0, 4).map(c => `
             <div class="p-2.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800/80 flex items-center justify-between shadow-card-soft">
@@ -2753,6 +2584,18 @@
         targetUser.friendRequestsReceived.push(user.id);
       }
 
+      // Add real notification to recipient
+      targetUser.notifications = targetUser.notifications || [];
+      targetUser.notifications.unshift({
+        id: 'notif_' + Date.now(),
+        type: 'friend_request',
+        userId: user.id,
+        title: `${user.name} sent you a friend request`,
+        subtitle: `@${user.username} wants to connect with you`,
+        timeAgo: 'Just now',
+        read: false
+      });
+
       const db = loadDatabase();
       db.users[user.id] = user;
       db.users[targetUser.id] = targetUser;
@@ -2785,6 +2628,18 @@
       user.friendRequestsSent = (user.friendRequestsSent || []).filter(id => id !== requesterUserId);
       requester.friendRequestsSent = (requester.friendRequestsSent || []).filter(id => id !== user.id);
       requester.friendRequestsReceived = (requester.friendRequestsReceived || []).filter(id => id !== user.id);
+
+      // Add real notification to requester
+      requester.notifications = requester.notifications || [];
+      requester.notifications.unshift({
+        id: 'notif_' + Date.now(),
+        type: 'friend_accept',
+        userId: user.id,
+        title: `${user.name} accepted your friend request`,
+        subtitle: `You and @${user.username} are now friends!`,
+        timeAgo: 'Just now',
+        read: false
+      });
 
       const db = loadDatabase();
       db.users[user.id] = user;
@@ -3190,8 +3045,11 @@
        RENDERERS: HOME SCREEN
        ======================================================== */
     function renderHomeScreen() {
-      const user = appState.users.eric;
-      document.getElementById('homeUserAvatarContainer').innerHTML = renderUserAvatarHtml(user, 'w-9 h-9', 'text-[11px]');
+      const user = getCurrentUser();
+      const avatarContainer = document.getElementById('homeUserAvatarContainer');
+      if (avatarContainer) {
+        avatarContainer.innerHTML = renderUserAvatarHtml(user, 'w-9 h-9', 'text-[11px]');
+      }
 
       const roomsContainer = document.getElementById('homeRoomsContainer');
       const momentsSection = document.getElementById('homeLatestMomentsSection');
@@ -3589,7 +3447,7 @@
         room.postedThisRound.push(appState.currentUserId);
       }
 
-      appState.users.eric.momentsCount++;
+      
       const wasObligated = Boolean(appState.obligationHostRoomId);
       appState.obligationHostRoomId = null;
 
@@ -3662,12 +3520,20 @@
        ======================================================== */
     function renderProfileScreen() {
       const user = getCurrentUser();
+      if (!user) {
+        document.getElementById('profileUserName').innerText = 'Not Signed In';
+        document.getElementById('profileUserHandle').innerText = 'Please sign in or create an account';
+        document.getElementById('profileRoomsCount').innerText = '0';
+        document.getElementById('profileMomentsCount').innerText = '0';
+        document.getElementById('profileFriendsCount').innerText = '0';
+        return;
+      }
       const friendsCount = (user.friends || []).length;
       document.getElementById('profileUserAvatarDisplay').innerHTML = renderUserAvatarHtml(user, 'w-full h-full', 'text-2xl');
       document.getElementById('profileUserName').innerText = user.name;
       document.getElementById('profileUserHandle').innerText = `@${user.username} • ${user.phone || user.email}`;
-      document.getElementById('profileRoomsCount').innerText = (user.rooms || appState.rooms).length;
-      document.getElementById('profileMomentsCount').innerText = (user.moments || appState.moments).length;
+      document.getElementById('profileRoomsCount').innerText = appState.rooms.length;
+      document.getElementById('profileMomentsCount').innerText = appState.moments.length;
       document.getElementById('profileFriendsCount').innerText = friendsCount;
       const friendsBadge = document.getElementById('profileFriendsBadge');
       if (friendsBadge) friendsBadge.innerText = `${friendsCount} Friends`;
@@ -3694,7 +3560,7 @@
       chips.innerHTML = appState.rooms.map(room => {
         const remainingHours = Math.max(1, Math.round((room.deadline - Date.now()) / (3600 * 1000)));
         const isCurrent = room.id === appState.activeRoomId;
-        const firstMember = appState.users[room.members[0]] || appState.users.eric;
+        const firstMember = getUserById(room.members[0]) || getCurrentUser() || { name: "Friend", initials: "F" };
 
         return `
           <button onclick="selectRoomAndOpen('${room.id}')" class="px-3 py-2 rounded-xl border ${isCurrent ? 'bg-purple-100 dark:bg-purple-950/60 border-[#7048E8] text-[#7048E8] dark:text-[#A78BFA]' : 'app-surface border-gray-200 text-gray-700 dark:text-gray-300'} text-xs font-bold shrink-0 flex items-center gap-2 shadow-sm transition">
@@ -3755,10 +3621,37 @@
       }).join('');
     }
 
+    function updateNotificationsBadge() {
+      const badge = document.getElementById('notificationsBadge');
+      const unreadCount = (appState.notifications || []).filter(n => !n.read).length;
+      if (badge) {
+        if (unreadCount > 0) badge.classList.remove('hidden');
+        else badge.classList.add('hidden');
+      }
+    }
+
     function renderNotificationsScreen() {
       const container = document.getElementById('notificationsListContainer');
+      if (!container) return;
+      if (!appState.notifications || appState.notifications.length === 0) {
+        container.innerHTML = `
+          <div class="py-20 text-center space-y-3 px-6">
+            <div class="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple-950/40 text-[#7048E8] flex items-center justify-center text-2xl mx-auto shadow-inner">
+              🔔
+            </div>
+            <div>
+              <div class="text-sm font-bold app-header-title">No notifications yet</div>
+              <p class="text-xs app-muted-text mt-1 max-w-[220px] mx-auto leading-relaxed">
+                When friends send requests, react to moments, or invite you to rooms, they will appear here.
+              </p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       container.innerHTML = appState.notifications.map(n => {
-        const u = n.userId ? appState.users[n.userId] : null;
+        const u = n.userId ? getUserById(n.userId) : null;
         return `
           <div class="p-3 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 shadow-card-soft flex items-center justify-between gap-3 hover:border-purple-100 transition">
             <div class="flex items-center gap-3">
@@ -3769,7 +3662,7 @@
               `}
               <div>
                 <div class="text-xs font-bold app-header-title">${n.title}</div>
-                <div class="text-[10px] app-muted-text font-medium">${n.subtitle} • ${n.timeAgo}</div>
+                <div class="text-[10px] app-muted-text font-medium">${n.subtitle} • ${n.timeAgo || 'Just now'}</div>
               </div>
             </div>
           </div>
@@ -3942,6 +3835,26 @@
       document.getElementById('createRoomNameInput').value = '';
       appState.selectedCreateRoomFriendIds = [];
 
+      // Add real notifications to all invited room members
+      const db = loadDatabase();
+      db.rooms[newRoom.id] = newRoom;
+      appState.selectedCreateRoomFriendIds.forEach(fId => {
+        const friendUser = db.users[fId];
+        if (friendUser) {
+          friendUser.notifications = friendUser.notifications || [];
+          friendUser.notifications.unshift({
+            id: 'notif_' + Date.now() + '_' + fId,
+            type: 'room_invite',
+            userId: host.id,
+            title: `${host.name} added you to "${name}"`,
+            subtitle: `Circle round started • Take a moment!`,
+            timeAgo: 'Just now',
+            read: false
+          });
+        }
+      });
+      saveDatabase(db);
+
       playSound('pop');
       showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
 
@@ -3960,34 +3873,36 @@
 
     function handleJoinRoom() {
       const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
-      const match = appState.rooms.find(r => r.code === code);
+      if (!code) {
+        showToast('Please enter an invite code', '⚠️');
+        return;
+      }
+      const db = loadDatabase();
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        showToast('Please sign in to join a room', '⚠️');
+        return;
+      }
+
+      // Search across all real rooms in database
+      const allRooms = Object.values(db.rooms || {});
+      const match = allRooms.find(r => r.code === code) || appState.rooms.find(r => r.code === code);
 
       if (match) {
-        if (!match.members.includes(appState.currentUserId)) {
-          match.members.push(appState.currentUserId);
-          appState.users.eric.roomsCount++;
+        if (!match.members.includes(currentUser.id)) {
+          match.members.push(currentUser.id);
         }
+        if (!appState.rooms.some(r => r.id === match.id)) {
+          appState.rooms.unshift(match);
+        }
+        db.rooms[match.id] = match;
+        saveDatabase(db);
         appState.activeRoomId = match.id;
         persistCurrentAccountData();
-        showToast(`Joined "${match.name}"!`, '🎉');
+        showToast(`Joined "${match.name}"! 🎉`, '✓');
         navigateTo('room-detail');
       } else {
-        const newJoined = {
-          id: 'room-' + Date.now(),
-          name: 'The Boys',
-          code: code,
-          members: [appState.currentUserId, 'kofi', 'jay', 'daniel'],
-          durationHours: 4,
-          deadline: Date.now() + 4 * 3600 * 1000,
-          totalDurationMs: 4 * 3600 * 1000,
-          postedThisRound: []
-        };
-        appState.rooms.unshift(newJoined);
-        appState.activeRoomId = newJoined.id;
-        appState.users.eric.roomsCount++;
-        persistCurrentAccountData();
-        showToast(`Joined Circle with code ${code}!`, '🎉');
-        navigateTo('room-detail');
+        showToast(`No Circle room found with code "${code}". Please ask the host for the code.`, '⚠️');
       }
     }
 
@@ -4105,21 +4020,28 @@
       }
     });
 
-    // Initialize App
+    // Initialize App: Open home if logged in, splash if logged out
     window.addEventListener('DOMContentLoaded', () => {
-      // Initialize Database & Restore active user session
       const db = loadDatabase();
       const savedUserId = localStorage.getItem(ACTIVE_USER_ID_KEY);
-      if (savedUserId && db.users && db.users[savedUserId]) {
-        restoreUserAccountData(db.users[savedUserId]);
-      } else {
-        const defaultUser = db.users['usr_eric'] || Object.values(db.users)[0];
-        if (defaultUser) {
-          restoreUserAccountData(defaultUser);
-        }
-      }
+      const activeUser = savedUserId && db.users ? db.users[savedUserId] : null;
+
       applyTheme();
-      navigateTo('splash');
+
+      if (activeUser) {
+        restoreUserAccountData(activeUser);
+        navigateTo('home');
+      } else {
+        appState.currentUserId = null;
+        appState.currentUserName = '';
+        appState.currentUserHandle = '';
+        appState.rooms = [];
+        appState.moments = [];
+        appState.notifications = [];
+        const topName = document.getElementById('topAccountName');
+        if (topName) topName.innerText = 'Not signed in';
+        navigateTo('splash');
+      }
     });
   </script>
 </body>
