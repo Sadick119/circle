@@ -1450,6 +1450,113 @@
     const DB_KEY = 'circle_app_accounts_v1';
     const ACTIVE_USER_ID_KEY = 'circle_active_user_v1';
 
+    /* ========================================================
+       GLOBAL REAL-TIME CLOUD REGISTRY (CROSS-DEVICE SYNC)
+       ======================================================== */
+    const CLOUD_REGISTRY_ID = 'ff808181a09d98f701a184378ad03e0b';
+    const CLOUD_API_URL = 'https://api.restful-api.dev/objects/' + CLOUD_REGISTRY_ID;
+    let isCloudSyncing = false;
+
+    async function syncWithCloudRegistry(onComplete = null) {
+      if (isCloudSyncing) {
+        if (onComplete) onComplete();
+        return;
+      }
+      isCloudSyncing = true;
+      try {
+        const resp = await fetch(CLOUD_API_URL, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
+          const body = await resp.json();
+          if (body && body.data) {
+            const cloudUsers = body.data.users || {};
+            const cloudRooms = body.data.rooms || {};
+            const db = loadDatabase();
+            let changed = false;
+
+            // Merge all remote users into local db
+            for (const [uid, cUser] of Object.entries(cloudUsers)) {
+              if (!cUser || !cUser.id) continue;
+              if (!db.users[uid]) {
+                db.users[uid] = cUser;
+                changed = true;
+              } else {
+                if ((cUser.updatedAt || 0) >= (db.users[uid].updatedAt || 0)) {
+                  const localPass = db.users[uid].password;
+                  Object.assign(db.users[uid], cUser);
+                  if (localPass && !db.users[uid].password) db.users[uid].password = localPass;
+                  changed = true;
+                }
+              }
+            }
+
+            // Merge all remote rooms into local db
+            for (const [rid, cRoom] of Object.entries(cloudRooms)) {
+              if (!cRoom || !cRoom.id) continue;
+              if (!db.rooms[rid]) {
+                db.rooms[rid] = cRoom;
+                changed = true;
+              } else {
+                if ((cRoom.updatedAt || 0) >= (db.rooms[rid].updatedAt || 0)) {
+                  Object.assign(db.rooms[rid], cRoom);
+                  changed = true;
+                }
+              }
+            }
+
+            if (changed) {
+              saveDatabase(db);
+              const cur = getCurrentUser();
+              if (cur && db.users[cur.id]) {
+                restoreUserAccountData(db.users[cur.id]);
+                if (appState.currentScreen === 'home') renderFriendsOnCircle();
+                if (appState.currentScreen === 'profile') renderProfileScreen();
+                if (appState.currentScreen === 'notifications') renderNotificationsScreen();
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Background cloud sync notice:', err);
+      } finally {
+        isCloudSyncing = false;
+        if (onComplete) onComplete();
+      }
+    }
+
+    async function pushToCloudRegistry() {
+      try {
+        const db = loadDatabase();
+        let remoteData = { users: {}, rooms: {} };
+        try {
+          const resp = await fetch(CLOUD_API_URL);
+          if (resp.ok) {
+            const body = await resp.json();
+            if (body && body.data) remoteData = body.data;
+          }
+        } catch (e) {}
+
+        const mergedUsers = { ...(remoteData.users || {}), ...(db.users || {}) };
+        const mergedRooms = { ...(remoteData.rooms || {}), ...(db.rooms || {}) };
+
+        const payload = {
+          name: 'circle_global_registry_v1',
+          data: {
+            users: mergedUsers,
+            rooms: mergedRooms,
+            updatedAt: Date.now()
+          }
+        };
+
+        await fetch(CLOUD_API_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Failed to push to cloud registry:', err);
+      }
+    }
+
     // Real App: No fake contacts, no placeholder seed accounts
     const DEFAULT_CONTACTS_BOOK = [];
     const DEFAULT_USERS_SEED = {};
@@ -1758,8 +1865,16 @@
 
         const cleanUsername = usernameInput.toLowerCase().replace('@', '');
 
-        // Find user by exact username
-        const matchedUser = Object.values(db.users).find(u => u.username && u.username.toLowerCase() === cleanUsername);
+        // 1. Check local db first
+        let matchedUser = Object.values(db.users).find(u => u.username && u.username.toLowerCase() === cleanUsername);
+
+        // 2. If not found locally, fetch online cloud registry
+        if (!matchedUser) {
+          showToast('Checking online registry...', '⏳');
+          await syncWithCloudRegistry();
+          const freshDb = loadDatabase();
+          matchedUser = Object.values(freshDb.users).find(u => u.username && u.username.toLowerCase() === cleanUsername);
+        }
 
         if (!matchedUser) {
           showAuthError(`No account found with username @${cleanUsername}. Please check your username or create an account.`);
@@ -1805,8 +1920,10 @@
           return;
         }
 
-        // Check username collision
-        const usernameExists = Object.values(db.users).some(u => u.username && u.username.toLowerCase() === rawUsername);
+        // Check username collision (local + cloud)
+        await syncWithCloudRegistry();
+        const freshDb = loadDatabase();
+        const usernameExists = Object.values(freshDb.users).some(u => u.username && u.username.toLowerCase() === rawUsername);
         if (usernameExists) {
           showAuthError(`The username @${rawUsername} is already taken. Please choose another.`);
           return;
@@ -1857,11 +1974,15 @@
           moments: [],
           compilationDumps: [],
           notifications: [],
-          createdAt: Date.now()
+          createdAt: Date.now(),
+          updatedAt: Date.now()
         };
 
-        db.users[newUserId] = newUser;
-        saveDatabase(db);
+        freshDb.users[newUserId] = newUser;
+        saveDatabase(freshDb);
+
+        // Push to cloud registry in background so other devices see this user!
+        pushToCloudRegistry();
 
         appState.currentUserId = newUserId;
         localStorage.setItem(ACTIVE_USER_ID_KEY, newUserId);
@@ -2560,6 +2681,8 @@
     /* ========================================================
        USERNAME SEARCH & FRIEND REQUESTS
        ======================================================== */
+    let searchDebounceTimer = null;
+
     function handleFriendSearch(query) {
       const container = document.getElementById('homeSearchResultsContainer');
       const clearBtn = document.getElementById('clearHomeSearchBtn');
@@ -2573,17 +2696,31 @@
       }
 
       if (clearBtn) clearBtn.classList.remove('hidden');
+      container.classList.remove('hidden');
+
+      // 1. Render immediately from local database
+      renderSearchResults(clean, container);
+
+      // 2. Query cloud registry in background and update results live
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        syncWithCloudRegistry(() => {
+          renderSearchResults(clean, container);
+        });
+      }, 300);
+    }
+
+    function renderSearchResults(clean, container) {
       const user = getCurrentUser();
+      const currentUserId = user ? user.id : '';
       const db = loadDatabase();
 
-      const results = Object.values(db.users).filter(u => {
-        if (u.id === user.id) return false;
+      const results = Object.values(db.users || {}).filter(u => {
+        if (!u || !u.id || u.id === currentUserId) return false;
         const uMatch = u.username && u.username.toLowerCase().includes(clean);
         const nMatch = u.name && u.name.toLowerCase().includes(clean);
         return uMatch || nMatch;
       });
-
-      container.classList.remove('hidden');
 
       if (results.length === 0) {
         container.innerHTML = `
@@ -2594,10 +2731,14 @@
         return;
       }
 
+      const userFriends = (user && user.friends) ? user.friends : [];
+      const userSent = (user && user.friendRequestsSent) ? user.friendRequestsSent : [];
+      const userReceived = (user && user.friendRequestsReceived) ? user.friendRequestsReceived : [];
+
       container.innerHTML = results.map(u => {
-        const isFriend = (user.friends || []).includes(u.id);
-        const isRequested = (user.friendRequestsSent || []).includes(u.id);
-        const hasIncoming = (user.friendRequestsReceived || []).includes(u.id);
+        const isFriend = userFriends.includes(u.id);
+        const isRequested = userSent.includes(u.id);
+        const hasIncoming = userReceived.includes(u.id);
 
         let btn = '';
         if (isFriend) {
@@ -2662,9 +2803,12 @@
       });
 
       const db = loadDatabase();
+      user.updatedAt = Date.now();
+      targetUser.updatedAt = Date.now();
       db.users[user.id] = user;
       db.users[targetUser.id] = targetUser;
       saveDatabase(db);
+      pushToCloudRegistry();
 
       playSound('pop');
       showToast(`Friend request sent to @${targetUser.username}!`, '✉️');
@@ -2707,9 +2851,12 @@
       });
 
       const db = loadDatabase();
+      user.updatedAt = Date.now();
+      requester.updatedAt = Date.now();
       db.users[user.id] = user;
       db.users[requester.id] = requester;
       saveDatabase(db);
+      pushToCloudRegistry();
 
       playSound('pop');
       showToast(`You and ${requester.name} are now friends! 🎉`, '✓');
@@ -2742,6 +2889,7 @@
       db.users[user.id] = user;
       if (friend) db.users[friend.id] = friend;
       saveDatabase(db);
+      pushToCloudRegistry();
 
       playSound('pop');
       showToast('Removed from your friends list', 'ℹ️');
@@ -2915,33 +3063,42 @@
       } else if (tab === 'find') {
         const inviteContainer = document.getElementById('modalContactsInviteList');
         if (inviteContainer) {
-          const contacts = user.contacts || DEFAULT_CONTACTS_BOOK;
+          const contacts = (user && user.contacts) ? user.contacts : [];
           const notOnCircle = contacts.filter(c => {
             const clean = cleanPhoneNumber(c.phone);
             const db = loadDatabase();
             return !Object.values(db.users).some(u => u.phone && cleanPhoneNumber(u.phone) === clean);
           });
 
-          inviteContainer.innerHTML = notOnCircle.map(c => `
-            <div class="p-2.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold flex items-center justify-center text-xs">
-                  ${getInitials(c.name)}
-                </div>
-                <div>
-                  <div class="text-xs font-bold app-header-title">${c.name}</div>
-                  <div class="text-[10px] app-muted-text font-mono">${c.phone}</div>
-                </div>
+          if (notOnCircle.length === 0) {
+            inviteContainer.innerHTML = `
+              <div class="p-3 text-center text-xs app-muted-text">
+                No external contacts found. Sync contacts or invite friends with their @username!
               </div>
-              <button onclick="inviteContactViaSms('${c.name}', '${c.phone}')" class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition">
-                <span>✉️</span> <span>SMS</span>
-              </button>
-            </div>
-          `).join('');
+            `;
+          } else {
+            inviteContainer.innerHTML = notOnCircle.map(c => `
+              <div class="p-2.5 app-surface rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between shadow-card-soft">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold flex items-center justify-center text-xs">
+                    ${getInitials(c.name)}
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold app-header-title">${c.name}</div>
+                    <div class="text-[10px] app-muted-text font-mono">${c.phone}</div>
+                  </div>
+                </div>
+                <button onclick="inviteContactViaSms('${c.name}', '${c.phone}')" class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold flex items-center gap-1 active:scale-95 transition">
+                  <span>✉️</span> <span>SMS</span>
+                </button>
+              </div>
+            `).join('');
+          }
         }
       }
     }
 
+    let modalSearchDebounceTimer = null;
     function handleModalUsernameSearch(query) {
       const container = document.getElementById('modalSearchResultsContainer');
       if (!container) return;
@@ -2951,10 +3108,24 @@
         return;
       }
 
+      // Render local results immediately
+      renderModalSearchResults(clean, container);
+
+      // Also trigger cloud search
+      clearTimeout(modalSearchDebounceTimer);
+      modalSearchDebounceTimer = setTimeout(() => {
+        syncWithCloudRegistry(() => {
+          renderModalSearchResults(clean, container);
+        });
+      }, 300);
+    }
+
+    function renderModalSearchResults(clean, container) {
       const user = getCurrentUser();
+      const currentUserId = user ? user.id : '';
       const db = loadDatabase();
-      const results = Object.values(db.users).filter(u => {
-        if (u.id === user.id) return false;
+      const results = Object.values(db.users || {}).filter(u => {
+        if (!u || !u.id || u.id === currentUserId) return false;
         return (u.username && u.username.toLowerCase().includes(clean)) || (u.name && u.name.toLowerCase().includes(clean));
       });
 
@@ -2963,10 +3134,14 @@
         return;
       }
 
+      const userFriends = (user && user.friends) ? user.friends : [];
+      const userSent = (user && user.friendRequestsSent) ? user.friendRequestsSent : [];
+      const userReceived = (user && user.friendRequestsReceived) ? user.friendRequestsReceived : [];
+
       container.innerHTML = results.map(u => {
-        const isFriend = (user.friends || []).includes(u.id);
-        const isRequested = (user.friendRequestsSent || []).includes(u.id);
-        const hasIncoming = (user.friendRequestsReceived || []).includes(u.id);
+        const isFriend = userFriends.includes(u.id);
+        const isRequested = userSent.includes(u.id);
+        const hasIncoming = userReceived.includes(u.id);
 
         let btn = '';
         if (isFriend) {
@@ -3911,6 +4086,7 @@
 
       // Add real notifications to all invited room members
       const db = loadDatabase();
+      newRoom.updatedAt = Date.now();
       db.rooms[newRoom.id] = newRoom;
       appState.selectedCreateRoomFriendIds.forEach(fId => {
         const friendUser = db.users[fId];
@@ -3928,6 +4104,7 @@
         }
       });
       saveDatabase(db);
+      pushToCloudRegistry();
 
       playSound('pop');
       showToast(`Circle "${name}" created! As host, take your moment to start.`, '🎉');
@@ -3945,7 +4122,7 @@
       return `${part1}-${part2}`;
     }
 
-    function handleJoinRoom() {
+    async function handleJoinRoom() {
       const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
       if (!code) {
         showToast('Please enter an invite code', '⚠️');
@@ -3958,9 +4135,16 @@
         return;
       }
 
-      // Search across all real rooms in database
+      // Search across local rooms, and if missing, check cloud
       const allRooms = Object.values(db.rooms || {});
-      const match = allRooms.find(r => r.code === code) || appState.rooms.find(r => r.code === code);
+      let match = allRooms.find(r => r.code === code) || appState.rooms.find(r => r.code === code);
+
+      if (!match) {
+        showToast('Checking online circle rooms...', '⏳');
+        await syncWithCloudRegistry();
+        const freshDb = loadDatabase();
+        match = Object.values(freshDb.rooms || {}).find(r => r.code === code);
+      }
 
       if (match) {
         if (!match.members.includes(currentUser.id)) {
@@ -3969,8 +4153,10 @@
         if (!appState.rooms.some(r => r.id === match.id)) {
           appState.rooms.unshift(match);
         }
+        match.updatedAt = Date.now();
         db.rooms[match.id] = match;
         saveDatabase(db);
+        pushToCloudRegistry();
         appState.activeRoomId = match.id;
         persistCurrentAccountData();
         showToast(`Joined "${match.name}"! 🎉`, '✓');
@@ -4116,6 +4302,11 @@
         if (topName) topName.innerText = 'Not signed in';
         navigateTo('splash');
       }
+
+      // Initial cloud sync & periodic sync
+      syncWithCloudRegistry();
+      window.addEventListener('focus', () => syncWithCloudRegistry());
+      setInterval(() => syncWithCloudRegistry(), 15000);
     });
   </script>
 </body>
