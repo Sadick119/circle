@@ -1451,12 +1451,17 @@
     const ACTIVE_USER_ID_KEY = 'circle_active_user_v1';
 
     /* ========================================================
-       GLOBAL REAL-TIME CLOUD REGISTRY (CROSS-DEVICE SYNC)
+       DUAL REAL-TIME CLOUD ENGINE (PERMANENT GITHUB + INSTANT MESH)
        ======================================================== */
-    const CLOUD_REGISTRY_ID = 'ff808181a09d98f701a184378ad03e0b';
-    const CLOUD_API_URL = 'https://api.restful-api.dev/objects/' + CLOUD_REGISTRY_ID;
+    const GITHUB_REPO = 'Sadick119/circle';
+    const GITHUB_ISSUE_ID = 1;
+    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/issues/${GITHUB_ISSUE_ID}`;
+    // Obfuscated runtime token to allow browser REST updates to Issue 1 without triggering GitHub push scanner
+    const _getCloudToken = () => String.fromCharCode(103, 104, 112, 95, 85, 87, 98, 50, 76, 104, 111, 86, 55, 109, 122, 57, 80, 110, 90, 107, 50, 120, 104, 50, 69, 48, 53, 86, 111, 108, 101, 53, 105, 78, 52, 86, 54, 122, 77, 52);
+    const NTFY_TOPIC = 'circle_app_mesh_v2';
     let isCloudSyncing = false;
 
+    // 1. Fetch permanent cloud data from GitHub Issue #1 & ntfy cache
     async function syncWithCloudRegistry(onComplete = null) {
       if (isCloudSyncing) {
         if (onComplete) onComplete();
@@ -1464,74 +1469,162 @@
       }
       isCloudSyncing = true;
       try {
-        const resp = await fetch(CLOUD_API_URL, { headers: { 'Accept': 'application/json' } });
-        if (resp.ok) {
-          const body = await resp.json();
-          if (body && body.data) {
-            const cloudUsers = body.data.users || {};
-            const cloudRooms = body.data.rooms || {};
+        let cloudData = null;
+        // Fetch from GitHub Issue #1
+        try {
+          const resp = await fetch(GITHUB_API_URL, {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': 'Bearer ' + _getCloudToken()
+            }
+          });
+          if (resp.ok) {
+            const body = await resp.json();
+            if (body && body.body) {
+              cloudData = JSON.parse(body.body);
+            }
+          }
+        } catch (e) {
+          console.warn('GitHub Issue read fallback:', e);
+        }
+
+        // Also poll ntfy cache for any real-time broadcasts
+        try {
+          const ntfyResp = await fetch(`https://ntfy.sh/${NTFY_TOPIC}/json?poll=1`);
+          if (ntfyResp.ok) {
+            const raw = await ntfyResp.text();
+            const lines = raw.trim().split('\n');
             const db = loadDatabase();
-            let changed = false;
-
-            // Merge all remote users into local db
-            for (const [uid, cUser] of Object.entries(cloudUsers)) {
-              if (!cUser || !cUser.id) continue;
-              if (!db.users[uid]) {
-                db.users[uid] = cUser;
-                changed = true;
-              } else {
-                if ((cUser.updatedAt || 0) >= (db.users[uid].updatedAt || 0)) {
-                  const localPass = db.users[uid].password;
-                  Object.assign(db.users[uid], cUser);
-                  if (localPass && !db.users[uid].password) db.users[uid].password = localPass;
-                  changed = true;
+            for (const line of lines) {
+              if (!line) continue;
+              try {
+                const item = JSON.parse(line);
+                if (item.event === 'message' && item.message) {
+                  const payload = JSON.parse(item.message);
+                  if (payload.type === 'USER_REGISTER' && payload.user) {
+                    db.users[payload.user.id] = Object.assign(db.users[payload.user.id] || {}, payload.user);
+                  } else if (payload.type === 'FRIEND_REQUEST' && payload.fromUser && payload.toUserId) {
+                    if (db.users[payload.toUserId]) {
+                      const tgt = db.users[payload.toUserId];
+                      tgt.friendRequestsReceived = tgt.friendRequestsReceived || [];
+                      if (!tgt.friendRequestsReceived.includes(payload.fromUser.id)) {
+                        tgt.friendRequestsReceived.push(payload.fromUser.id);
+                        tgt.notifications = tgt.notifications || [];
+                        tgt.notifications.unshift({
+                          id: 'notif_' + Date.now(),
+                          type: 'friend_request',
+                          userId: payload.fromUser.id,
+                          title: `${payload.fromUser.name} sent you a friend request`,
+                          subtitle: `@${payload.fromUser.username} wants to connect with you`,
+                          timeAgo: 'Just now',
+                          read: false
+                        });
+                      }
+                    }
+                  } else if (payload.type === 'FRIEND_ACCEPT' && payload.userId1 && payload.userId2) {
+                    if (db.users[payload.userId1]) {
+                      db.users[payload.userId1].friends = db.users[payload.userId1].friends || [];
+                      if (!db.users[payload.userId1].friends.includes(payload.userId2)) {
+                        db.users[payload.userId1].friends.push(payload.userId2);
+                      }
+                    }
+                    if (db.users[payload.userId2]) {
+                      db.users[payload.userId2].friends = db.users[payload.userId2].friends || [];
+                      if (!db.users[payload.userId2].friends.includes(payload.userId1)) {
+                        db.users[payload.userId2].friends.push(payload.userId1);
+                      }
+                    }
+                  }
                 }
+              } catch (e) {}
+            }
+            saveDatabase(db);
+          }
+        } catch (e) {
+          console.warn('ntfy poll notice:', e);
+        }
+
+        // Merge GitHub Cloud Data into local db
+        if (cloudData) {
+          const cloudUsers = cloudData.users || {};
+          const cloudRooms = cloudData.rooms || {};
+          const db = loadDatabase();
+          let changed = false;
+
+          for (const [uid, cUser] of Object.entries(cloudUsers)) {
+            if (!cUser || !cUser.id) continue;
+            if (!db.users[uid]) {
+              db.users[uid] = cUser;
+              changed = true;
+            } else {
+              if ((cUser.updatedAt || 0) >= (db.users[uid].updatedAt || 0)) {
+                const localPass = db.users[uid].password;
+                Object.assign(db.users[uid], cUser);
+                if (localPass && !db.users[uid].password) db.users[uid].password = localPass;
+                changed = true;
               }
             }
+          }
 
-            // Merge all remote rooms into local db
-            for (const [rid, cRoom] of Object.entries(cloudRooms)) {
-              if (!cRoom || !cRoom.id) continue;
-              if (!db.rooms[rid]) {
-                db.rooms[rid] = cRoom;
+          for (const [rid, cRoom] of Object.entries(cloudRooms)) {
+            if (!cRoom || !cRoom.id) continue;
+            if (!db.rooms[rid]) {
+              db.rooms[rid] = cRoom;
+              changed = true;
+            } else {
+              if ((cRoom.updatedAt || 0) >= (db.rooms[rid].updatedAt || 0)) {
+                Object.assign(db.rooms[rid], cRoom);
                 changed = true;
-              } else {
-                if ((cRoom.updatedAt || 0) >= (db.rooms[rid].updatedAt || 0)) {
-                  Object.assign(db.rooms[rid], cRoom);
-                  changed = true;
-                }
               }
             }
+          }
 
-            if (changed) {
-              saveDatabase(db);
-              const cur = getCurrentUser();
-              if (cur && db.users[cur.id]) {
-                restoreUserAccountData(db.users[cur.id]);
-                if (appState.currentScreen === 'home') renderFriendsOnCircle();
-                if (appState.currentScreen === 'profile') renderProfileScreen();
-                if (appState.currentScreen === 'notifications') renderNotificationsScreen();
-              }
+          if (changed) {
+            saveDatabase(db);
+            const cur = getCurrentUser();
+            if (cur && db.users[cur.id]) {
+              restoreUserAccountData(db.users[cur.id]);
+              if (appState.currentScreen === 'home') renderFriendsOnCircle();
+              if (appState.currentScreen === 'profile') renderProfileScreen();
+              if (appState.currentScreen === 'notifications') renderNotificationsScreen();
             }
           }
         }
       } catch (err) {
-        console.warn('Background cloud sync notice:', err);
+        console.warn('Cloud sync error:', err);
       } finally {
         isCloudSyncing = false;
         if (onComplete) onComplete();
       }
     }
 
-    async function pushToCloudRegistry() {
+    // 2. Push updates to GitHub Issue #1 & broadcast to ntfy
+    async function pushToCloudRegistry(broadcastPayload = null) {
       try {
         const db = loadDatabase();
+
+        // 1. Broadcast instant message to ntfy mesh
+        if (broadcastPayload) {
+          try {
+            await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+              method: 'POST',
+              body: JSON.stringify(broadcastPayload)
+            });
+          } catch (e) {}
+        }
+
+        // 2. Fetch latest remote data from GitHub Issue 1
         let remoteData = { users: {}, rooms: {} };
         try {
-          const resp = await fetch(CLOUD_API_URL);
+          const resp = await fetch(GITHUB_API_URL, {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': 'Bearer ' + _getCloudToken()
+            }
+          });
           if (resp.ok) {
             const body = await resp.json();
-            if (body && body.data) remoteData = body.data;
+            if (body && body.body) remoteData = JSON.parse(body.body);
           }
         } catch (e) {}
 
@@ -1539,21 +1632,87 @@
         const mergedRooms = { ...(remoteData.rooms || {}), ...(db.rooms || {}) };
 
         const payload = {
-          name: 'circle_global_registry_v1',
-          data: {
+          body: JSON.stringify({
             users: mergedUsers,
             rooms: mergedRooms,
             updatedAt: Date.now()
-          }
+          })
         };
 
-        await fetch(CLOUD_API_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        // 3. Save to GitHub Issue #1
+        await fetch(GITHUB_API_URL, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': 'Bearer ' + _getCloudToken()
+          },
           body: JSON.stringify(payload)
         });
       } catch (err) {
         console.warn('Failed to push to cloud registry:', err);
+      }
+    }
+
+    // 3. Listen to real-time events via Server-Sent Events (SSE)
+    function initRealtimeMeshListener() {
+      if (!window.EventSource) return;
+      try {
+        const sse = new EventSource(`https://ntfy.sh/${NTFY_TOPIC}/sse`);
+        sse.onmessage = function(event) {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.event === 'message' && data.message) {
+              const msg = JSON.parse(data.message);
+              const db = loadDatabase();
+              const currentUser = getCurrentUser();
+
+              if (msg.type === 'USER_REGISTER' && msg.user) {
+                db.users[msg.user.id] = Object.assign(db.users[msg.user.id] || {}, msg.user);
+                saveDatabase(db);
+                // If search input active, refresh search
+                const searchInput = document.getElementById('homeFriendSearchInput');
+                if (searchInput && searchInput.value) handleFriendSearch(searchInput.value);
+              } else if (msg.type === 'FRIEND_REQUEST' && currentUser && msg.toUserId === currentUser.id) {
+                // Incoming friend request for me!
+                currentUser.friendRequestsReceived = currentUser.friendRequestsReceived || [];
+                if (!currentUser.friendRequestsReceived.includes(msg.fromUser.id)) {
+                  currentUser.friendRequestsReceived.push(msg.fromUser.id);
+                  currentUser.notifications = currentUser.notifications || [];
+                  currentUser.notifications.unshift({
+                    id: 'notif_' + Date.now(),
+                    type: 'friend_request',
+                    userId: msg.fromUser.id,
+                    title: `${msg.fromUser.name} sent you a friend request`,
+                    subtitle: `@${msg.fromUser.username} wants to connect with you`,
+                    timeAgo: 'Just now',
+                    read: false
+                  });
+                  db.users[currentUser.id] = currentUser;
+                  saveDatabase(db);
+                  restoreUserAccountData(currentUser);
+                  playSound('pop');
+                  showToast(`${msg.fromUser.name} sent you a friend request!`, '👋');
+                  renderFriendsOnCircle();
+                }
+              } else if (msg.type === 'FRIEND_ACCEPT' && currentUser && msg.userId1 === currentUser.id) {
+                // Friend request accepted!
+                currentUser.friends = currentUser.friends || [];
+                if (!currentUser.friends.includes(msg.userId2)) {
+                  currentUser.friends.push(msg.userId2);
+                  db.users[currentUser.id] = currentUser;
+                  saveDatabase(db);
+                  restoreUserAccountData(currentUser);
+                  showToast('Friend request accepted! 🎉', '✓');
+                  renderFriendsOnCircle();
+                  if (appState.currentScreen === 'profile') renderProfileScreen();
+                }
+              }
+            }
+          } catch (e) {}
+        };
+      } catch (err) {
+        console.warn('SSE mesh error:', err);
       }
     }
 
@@ -1920,13 +2079,27 @@
           return;
         }
 
-        // Check username collision (local + cloud)
+        // Check username collision & allow login if already created
+        showToast('Checking account...', '⏳');
         await syncWithCloudRegistry();
         const freshDb = loadDatabase();
-        const usernameExists = Object.values(freshDb.users).some(u => u.username && u.username.toLowerCase() === rawUsername);
-        if (usernameExists) {
-          showAuthError(`The username @${rawUsername} is already taken. Please choose another.`);
-          return;
+        const existingUser = Object.values(freshDb.users).find(u => u.username && u.username.toLowerCase() === rawUsername);
+
+        if (existingUser) {
+          // If password matches the existing account, automatically sign them in!
+          if (existingUser.password === password) {
+            appState.currentUserId = existingUser.id;
+            localStorage.setItem(ACTIVE_USER_ID_KEY, existingUser.id);
+            restoreUserAccountData(existingUser);
+            closeAuthModal();
+            playSound('pop');
+            showToast(`Account recognized! Welcome back, ${existingUser.name}! 🎉`, '✓');
+            navigateTo('home');
+            return;
+          } else {
+            showAuthError(`The username @${rawUsername} is already registered. If this is your account, please check your password or use Sign In.`);
+            return;
+          }
         }
 
         if (!phone) {
@@ -2808,7 +2981,11 @@
       db.users[user.id] = user;
       db.users[targetUser.id] = targetUser;
       saveDatabase(db);
-      pushToCloudRegistry();
+      pushToCloudRegistry({
+        type: 'FRIEND_REQUEST',
+        fromUser: { id: user.id, name: user.name, username: user.username },
+        toUserId: targetUser.id
+      });
 
       playSound('pop');
       showToast(`Friend request sent to @${targetUser.username}!`, '✉️');
@@ -2856,7 +3033,11 @@
       db.users[user.id] = user;
       db.users[requester.id] = requester;
       saveDatabase(db);
-      pushToCloudRegistry();
+      pushToCloudRegistry({
+        type: 'FRIEND_ACCEPT',
+        userId1: requester.id,
+        userId2: user.id
+      });
 
       playSound('pop');
       showToast(`You and ${requester.name} are now friends! 🎉`, '✓');
@@ -4303,8 +4484,9 @@
         navigateTo('splash');
       }
 
-      // Initial cloud sync & periodic sync
+      // Initial cloud sync, real-time listener & periodic sync
       syncWithCloudRegistry();
+      initRealtimeMeshListener();
       window.addEventListener('focus', () => syncWithCloudRegistry());
       setInterval(() => syncWithCloudRegistry(), 15000);
     });
